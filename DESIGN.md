@@ -149,11 +149,24 @@ Chip = `background: rgba(couleur, 0.16)` + `color: couleur`.
 - Typo : **Inter** (UI), **JetBrains Mono** (requêtes/heures/compteurs),
   **Material Symbols Rounded** (icônes, fill 0).
 
-### Direction visuelle
+### Direction visuelle — C (cockpit)
 
-Trois directions ont été prototypées (A compacte / B cartes / C cockpit). **Le choix de
-la direction est une décision DESIGN à acter avant le premier PLAN d'UI** — pas un détail
-d'implémentation. Tant qu'elle n'est pas tranchée ici, on ne code pas la vue.
+La direction retenue est **C — cockpit** : un mini-client dense, orienté power-user clavier.
+Layout de référence (le prototype HTML détaille le pixel-perfect) :
+
+- **Largeur ~582px** — au-delà de la cible 380–420px des autres directions, assumé : le
+  cockpit privilégie la densité d'information à la compacité.
+- **En-tête télémétrie** pleine largeur : wordmark, état `SYNC LIVE` + barres de signal
+  animées, refresh, bouton **Composer**.
+- **Rail gauche (~172px)** : liste verticale des recherches sauvegardées (icône + label +
+  compteur), sélection marquée par un bord-gauche Mauve.
+- **Zone principale** : barre de recherche + liste de fils en densité moyenne (avatar 32px).
+  Le fil sous le curseur clavier a un bord-gauche Mauve, un fond tinté, et révèle la
+  **rangée d'actions inline** (lu / archiver / flag / retag / supprimer / ouvrir).
+- **Pied** : chips de raccourcis clavier (`j`/`k`, `⏎`, `e`, `#`).
+
+Ouvrir un fil (`⏎`) et **Composer** délèguent au client externe configurable : astropath
+déclenche, il n'affiche ni ne compose lui-même (cf. *surface de triage* ci-dessus).
 
 ---
 
