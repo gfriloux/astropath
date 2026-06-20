@@ -1,7 +1,7 @@
 # Plan : v0.3.0 — finition graphique (fidélité au proto cockpit)
 
 **Type :** finition graphique (étage `view`)
-**Statut :** en attente de validation
+**Statut :** Terminé (2026-06-20)
 
 ## Contexte
 
@@ -54,8 +54,20 @@ retag restent du backlog v0.4.0) ; release/tag.
 
 ## Portes de qualité (clôture)
 
-- [ ] `just ci` passe (data layer inchangé ; tout JS pur ajouté testé)
-- [ ] Rendu validé dans DMS (`manual_tests.md`)
-- [ ] Animations désactivées si `AnimationSpeed.None`
-- [ ] Commits atomiques sur `feat/polish`, signés `+code`
-- [ ] Branche mergée sur `main` à la clôture
+- [x] `just ci` passe (data layer inchangé ; helpers `initials`/`colorIndex` testés)
+- [x] Rendu validé dans DMS (`manual_tests.md`)
+- [x] Animations désactivées si `AnimationSpeed.None`
+- [x] Commits atomiques sur `feat/polish`, signés `+code`
+- [ ] Branche mergée sur `main` à la clôture (par l'utilisateur)
+
+## Bilan
+
+Avatars monogrammes (teinte par expéditeur, dérivée du thème) ; heure/compteur/requête en
+mono ; badge qui pulse + apparition des fils en fondu (respectant `AnimationSpeed.None`).
+Sur retour visuel : **actions révélées sous le fil** (plus de chevauchement à droite),
+sélection = fond teinté seul (barre gauche retirée), **tags d'état filtrés** (inbox/unread
+ne s'affichent plus comme chips).
+
+**Reportés (v0.4.0 fonctionnel)** : compteurs par recherche, snippet (`notmuch show`),
+chips de tags colorés depuis la config, VIP, retag. Wordmark figé par le `PopoutComponent`
+de DMS (peu de marge). Densité fine laissée telle quelle (jugée correcte).
