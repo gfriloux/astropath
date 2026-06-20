@@ -12,6 +12,7 @@ DankTextField {
     placeholderText: "Recherche notmuch…"
     leftIconName: "search"
     showClearButton: true
+    font.family: Theme.monoFontFamily
 
     onTextChanged: debounce.restart()
 

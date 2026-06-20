@@ -1,10 +1,10 @@
 // Une ligne de fil dans la liste cockpit. Délégué de DankListView : `modelData` = un objet
-// Thread (sortie de parseSearch). Distinction lu/non-lu, chips de tags (neutres pour
-// l'instant — couleurs depuis la config en Phase 8), flag, heure relative, compteur.
-// Au survol : rangée d'actions sur fond opaque (HoverHandler → pas de clignotement).
+// Thread (parseSearch). Avatar monogramme, distinction lu/non-lu, chips de tags, flag,
+// heure/compteur en mono, surlignage clavier, rangée d'actions au survol.
 import QtQuick
 import qs.Common
 import qs.Widgets
+import "../model/format.js" as Format
 
 StyledRect {
     id: row
@@ -14,17 +14,29 @@ StyledRect {
     readonly property var thread: modelData
     property var notmuch: null
 
+    // Palette d'avatar dérivée du thème DMS (pas de hex en dur) ; teinte par expéditeur.
+    readonly property var avatarPalette: [Theme.primary, Theme.info, Theme.success, Theme.warning, Theme.error, Theme.secondary]
+    readonly property color avatarColor: avatarPalette[Format.colorIndex(thread.authors, avatarPalette.length)]
+
     width: ListView.view ? ListView.view.width : implicitWidth
     implicitHeight: body.implicitHeight + Theme.spacingM * 2
     radius: Theme.cornerRadius
     color: row.ListView.isCurrentItem ? Theme.primarySelected : (rowHover.hovered ? Theme.surfaceContainerHigh : "transparent")
 
-    // Survol passif : reste vrai même au-dessus des boutons d'action enfants.
     HoverHandler {
         id: rowHover
     }
 
-    // Clic sur un fil : sélectionne et donne le focus clavier à la liste (j/k/⏎/e/#).
+    Rectangle {
+        visible: row.ListView.isCurrentItem
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        width: 3
+        height: parent.height - Theme.spacingS
+        radius: 1.5
+        color: Theme.primary
+    }
+
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
@@ -37,34 +49,48 @@ StyledRect {
         }
     }
 
-    // Bord-gauche mauve sur l'élément sous le curseur clavier.
-    Rectangle {
-        visible: row.ListView.isCurrentItem
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-        width: 3
-        height: parent.height - Theme.spacingS
-        radius: 1.5
-        color: Theme.primary
-    }
-
     Row {
         id: body
         anchors.fill: parent
         anchors.margins: Theme.spacingM
         spacing: Theme.spacingS
 
-        Rectangle {
-            width: 8
-            height: 8
-            radius: 4
-            anchors.top: parent.top
-            anchors.topMargin: Theme.spacingXS
-            color: row.thread.unread ? Theme.primary : "transparent"
+        // Avatar monogramme (initiales sur teinte), pastille non-lu en incrustation.
+        Item {
+            width: 32
+            height: 32
+            anchors.verticalCenter: parent.verticalCenter
+
+            StyledRect {
+                anchors.fill: parent
+                radius: width / 2
+                color: Theme.withAlpha(row.avatarColor, 0.2)
+
+                StyledText {
+                    anchors.centerIn: parent
+                    text: Format.initials(row.thread.authors)
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.DemiBold
+                    color: row.avatarColor
+                }
+            }
+
+            Rectangle {
+                visible: row.thread.unread
+                width: 10
+                height: 10
+                radius: 5
+                anchors.right: parent.right
+                anchors.top: parent.top
+                color: Theme.primary
+                border.width: 2
+                border.color: Theme.surface
+            }
         }
 
         Column {
-            width: parent.width - 8 - Theme.spacingS
+            width: parent.width - 32 - Theme.spacingS
+            anchors.verticalCenter: parent.verticalCenter
             spacing: 2
 
             Item {
@@ -74,20 +100,35 @@ StyledRect {
                 StyledText {
                     id: sender
                     anchors.left: parent.left
-                    width: parent.width - time.width - Theme.spacingM
-                    text: row.thread.authors + (row.thread.total > 1 ? "  (" + row.thread.total + ")" : "")
+                    width: parent.width - meta.width - Theme.spacingM
+                    text: row.thread.authors
                     font.pixelSize: Theme.fontSizeMedium
                     font.weight: row.thread.unread ? Font.DemiBold : Font.Normal
                     color: row.thread.unread ? Theme.surfaceText : Theme.surfaceTextMedium
                     elide: Text.ElideRight
                 }
 
-                StyledText {
-                    id: time
+                Row {
+                    id: meta
                     anchors.right: parent.right
-                    text: row.thread.dateRelative
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.surfaceTextMedium
+                    spacing: Theme.spacingXS
+
+                    StyledText {
+                        visible: row.thread.total > 1
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "(" + row.thread.total + ")"
+                        font.family: Theme.monoFontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        color: Theme.surfaceTextMedium
+                    }
+
+                    StyledText {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: row.thread.dateRelative
+                        font.family: Theme.monoFontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        color: Theme.surfaceTextMedium
+                    }
                 }
             }
 
@@ -132,8 +173,7 @@ StyledRect {
         }
     }
 
-    // Rangée d'actions révélée au survol, sur fond opaque (ne masque pas le texte par
-    // superposition). Ouvrir/retag arrivent en Phase 8.
+    // Rangée d'actions au survol, sur fond opaque.
     StyledRect {
         id: actionsBg
         visible: rowHover.hovered

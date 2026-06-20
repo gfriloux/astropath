@@ -17,3 +17,25 @@ function relativeTime(epochMs, nowMs) {
     var d = Math.floor(h / 24);
     return "il y a " + d + " j";
 }
+
+// Initiales (1-2 lettres) du premier expéditeur, pour l'avatar monogramme.
+function initials(authors) {
+    var first = String(authors || "").split(",")[0].trim();
+    if (!first)
+        return "?";
+    var words = first.split(/\s+/);
+    if (words.length >= 2)
+        return (words[0][0] + words[1][0]).toUpperCase();
+    return first.slice(0, 2).toUpperCase();
+}
+
+// Index de couleur déterministe (hash du nom mod n) pour la teinte de l'avatar.
+function colorIndex(name, n) {
+    if (n <= 0)
+        return 0;
+    var h = 0;
+    var s = String(name || "");
+    for (var i = 0; i < s.length; i++)
+        h = (h + s.charCodeAt(i)) % n;
+    return h;
+}
