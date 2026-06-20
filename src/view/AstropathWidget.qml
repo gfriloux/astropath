@@ -51,4 +51,13 @@ PluginComponent {
             }
         }
     }
+
+    // Popout cockpit ouvert au clic sur l'icône.
+    popoutContent: Component {
+        Cockpit {
+            notmuch: notmuch
+        }
+    }
+    popoutWidth: 582
+    popoutHeight: 520
 }
