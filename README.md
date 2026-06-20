@@ -29,6 +29,15 @@ just run        # lance le widget pour essai manuel
 
 Hooks pre-commit : `pre-commit install`.
 
+## Structure du code
+
+- `src/query/` — construction des commandes notmuch (argv), JS pur.
+- `src/model/` — transforms `notmuch` JSON → modèle de fils (`parseSearch`, `parseCount`,
+  `savedSearches`, `parseShow`), JS pur testé par goldens.
+- `src/view/` — vue cockpit QML *(à venir, v0.2.0)*.
+- `tests/` — fixtures notmuch + goldens. `just test` (qmltestrunner), `just bless`
+  (régénère les goldens). Données de test synthétiques.
+
 ## Contribution
 
 On ne code pas sans plan validé. Lire [`DESIGN.md`](./DESIGN.md) puis

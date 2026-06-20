@@ -73,6 +73,15 @@ QML / Qt Quick. Consomme le modèle, n'appelle jamais `notmuch` en direct. Porte
 système visuel ci-dessous au pixel près, en réutilisant les composants Material 3 de
 DankMaterialShell.
 
+### Implémentation
+
+- `query` → `src/query/queries.js` : builders d'argv notmuch (search/count/show/tag),
+  fonctions pures. L'exécution réelle (`Process` quickshell) arrive avec la vue.
+- `model` → `src/model/threads.js` : `parseSearch`, `parseCount`, `savedSearches`
+  (définitions injectées = config), `parseShow` (snippet). Pur, testé par goldens
+  (`tests/`, `just test` / `just bless`).
+- `view` → à venir en **v0.2.0** (cockpit QML).
+
 ---
 
 ## Invariants du domaine

@@ -1,7 +1,7 @@
 # Plan : v0.1.0 — couche données (query + model)
 
 **Type :** requête + modèle (étages `query` et `model`)
-**Statut :** en attente de validation
+**Statut :** Terminé (2026-06-20)
 
 ## Contexte
 
@@ -104,7 +104,14 @@ flaggés, multi-tags, multi-messages).
 
 ## Portes de qualité (clôture)
 
-- [ ] `just ci` passe (fmt-check + lint + test goldens)
-- [ ] Goldens à jour et intentionnels
-- [ ] Doc synchronisée (mêmes commits que le code structurel)
-- [ ] Commits atomiques sur `feat/data-layer`, signés `+code`
+- [x] `just ci` passe (fmt-check + lint + test goldens)
+- [x] Goldens à jour et intentionnels
+- [x] Doc synchronisée (mêmes commits que le code structurel)
+- [x] Commits atomiques sur `feat/data-layer`, signés `+code`
+
+## Bilan
+
+Livré : `src/query/queries.js` (builders d'argv), `src/model/threads.js`
+(`parseSearch`, `parseCount`, `savedSearches`, `parseShow`), harnais golden
+(`qmltestrunner` + `just bless`). Données de test anonymisées. Le glue I/O réel
+(`Notmuch.qml`) et la vue cockpit sont reportés en v0.2.0.
