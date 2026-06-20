@@ -1,0 +1,43 @@
+[
+  {
+    "id": "0000000000aa0001",
+    "authors": "Alice Exemple, Bob Exemple",
+    "subject": "Sujet de test numéro un",
+    "dateRelative": "12 mins. ago",
+    "total": 4,
+    "tags": [
+      "inbox",
+      "unread",
+      "alpha"
+    ],
+    "unread": true,
+    "flagged": false
+  },
+  {
+    "id": "0000000000aa0002",
+    "authors": "Service Exemple",
+    "subject": "Sujet de test numéro deux",
+    "dateRelative": "3 hours ago",
+    "total": 1,
+    "tags": [
+      "inbox",
+      "beta"
+    ],
+    "unread": false,
+    "flagged": false
+  },
+  {
+    "id": "0000000000aa0003",
+    "authors": "Carol Exemple",
+    "subject": "Sujet de test numéro trois",
+    "dateRelative": "yesterday",
+    "total": 2,
+    "tags": [
+      "inbox",
+      "unread",
+      "flagged"
+    ],
+    "unread": true,
+    "flagged": true
+  }
+]

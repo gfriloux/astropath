@@ -1,0 +1,35 @@
+[
+  {
+    "thread": "0000000000aa0001",
+    "timestamp": 1700000000,
+    "date_relative": "12 mins. ago",
+    "matched": 1,
+    "total": 4,
+    "authors": "Alice Exemple, Bob Exemple",
+    "subject": "Sujet de test numéro un",
+    "query": ["id:msg-a@example.test", null],
+    "tags": ["inbox", "unread", "alpha"]
+  },
+  {
+    "thread": "0000000000aa0002",
+    "timestamp": 1699990000,
+    "date_relative": "3 hours ago",
+    "matched": 1,
+    "total": 1,
+    "authors": "Service Exemple",
+    "subject": "Sujet de test numéro deux",
+    "query": ["id:msg-b@example.test", null],
+    "tags": ["inbox", "beta"]
+  },
+  {
+    "thread": "0000000000aa0003",
+    "timestamp": 1699980000,
+    "date_relative": "yesterday",
+    "matched": 2,
+    "total": 2,
+    "authors": "Carol Exemple",
+    "subject": "Sujet de test numéro trois",
+    "query": ["id:msg-c@example.test", null],
+    "tags": ["inbox", "unread", "flagged"]
+  }
+]

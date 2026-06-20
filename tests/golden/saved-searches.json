@@ -1,0 +1,23 @@
+[
+  {
+    "key": "alpha",
+    "label": "Alpha",
+    "query": "tag:alpha",
+    "color": "#89b4fa",
+    "count": 5
+  },
+  {
+    "key": "beta",
+    "label": "Beta",
+    "query": "tag:beta",
+    "color": "#a6e3a1",
+    "count": 0
+  },
+  {
+    "key": "flagged",
+    "label": "Flagged",
+    "query": "tag:flagged",
+    "color": "#fab387",
+    "count": 2
+  }
+]
