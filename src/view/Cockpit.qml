@@ -5,16 +5,35 @@ import QtQuick
 import qs.Common
 import qs.Widgets
 import qs.Modules.Plugins
+import "../model/format.js" as Format
 
 PopoutComponent {
     id: cockpit
 
     property var notmuch: null
     property int viewHeight: 520
+    // Horloge pour rafraîchir l'affichage « il y a N min ».
+    property double now: Date.now()
 
     headerText: "ASTROPATH"
-    detailsText: notmuch ? (notmuch.status === "querying" ? "synchro…" : notmuch.status === "error" ? "erreur de synchro" : "à jour") : ""
+    detailsText: {
+        if (!notmuch)
+            return "";
+        if (notmuch.status === "querying")
+            return "synchro…";
+        if (notmuch.status === "error")
+            return "erreur de synchro";
+        var rel = Format.relativeTime(notmuch.lastSyncAt, cockpit.now);
+        return rel ? "à jour · " + rel : "à jour";
+    }
     showCloseButton: true
+
+    Timer {
+        interval: 30000
+        running: true
+        repeat: true
+        onTriggered: cockpit.now = Date.now()
+    }
 
     Item {
         width: parent.width
@@ -92,14 +111,29 @@ PopoutComponent {
             }
         }
 
-        // Pied : raccourcis clavier (enrichi en Phase 9).
-        StyledText {
+        // Pied : raccourcis clavier (la navigation effective arrive en Phase 9b).
+        Row {
             id: footer
             anchors.bottom: parent.bottom
             anchors.left: parent.left
-            text: "j/k · ⏎ · e · #"
-            color: Theme.surfaceTextMedium
-            font.pixelSize: Theme.fontSizeSmall
+            spacing: Theme.spacingM
+
+            KeyHint {
+                keyName: "j/k"
+                action: "parcourir"
+            }
+            KeyHint {
+                keyName: "⏎"
+                action: "ouvrir"
+            }
+            KeyHint {
+                keyName: "e"
+                action: "archiver"
+            }
+            KeyHint {
+                keyName: "#"
+                action: "supprimer"
+            }
         }
     }
 }

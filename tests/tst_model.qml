@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../src/model/threads.js" as Model
+import "../src/model/format.js" as Format
 
 TestCase {
     name: "model"
@@ -10,5 +11,14 @@ TestCase {
         compare(Model.parseCount("0"), 0);
         compare(Model.parseCount(""), 0);
         compare(Model.parseCount("  42 "), 42);
+    }
+
+    function test_relativeTime() {
+        var now = 1000000000000;
+        compare(Format.relativeTime(0, now), "");
+        compare(Format.relativeTime(now - 30 * 1000, now), "à l'instant");
+        compare(Format.relativeTime(now - 5 * 60 * 1000, now), "il y a 5 min");
+        compare(Format.relativeTime(now - 3 * 3600 * 1000, now), "il y a 3 h");
+        compare(Format.relativeTime(now - 2 * 86400 * 1000, now), "il y a 2 j");
     }
 }
