@@ -1,6 +1,7 @@
 // Service Notmuch : lance notmuch via Process, parse avec la couche données (threads.js),
 // expose le modèle + un statut. Polling périodique (pas de notmuch new : on lit seulement).
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import "../query/queries.js" as Queries
 import "../model/threads.js" as Model
@@ -20,29 +21,13 @@ QtObject {
     property string status: "idle" // idle | querying | error
     property double lastSyncAt: 0
 
-    // Définitions des smart folders (CONFIG ; défaut universel, aucune taxonomie perso —
-    // les catégories perso seront ajoutées via les réglages, Phase 8).
-    property var definitions: [
-        {
-            "key": "inbox",
-            "label": "Inbox",
-            "query": "tag:inbox",
-            "color": ""
-        },
-        {
-            "key": "flagged",
-            "label": "Flaggés",
-            "query": "tag:flagged",
-            "color": ""
-        },
-        {
-            "key": "spam",
-            "label": "Spam",
-            "query": "tag:spam",
-            "color": ""
-        }
-    ]
+    // Définitions des smart folders : injectées depuis la config (settings du plugin).
+    // Le widget fournit un défaut universel si la config est vide.
+    property var definitions: []
     readonly property var savedSearches: Model.savedSearches(definitions, ({}))
+
+    // Commande du client de lecture (config) — pour ouvrir un fil.
+    property string readerCommand: ""
 
     // Pose le command impérativement (pas de binding lazy) puis lance : garantit que la
     // requête lancée est bien la requête courante, même juste après un changement.
@@ -94,6 +79,14 @@ QtObject {
             "add": ["deleted"],
             "remove": ["inbox", "unread"]
         });
+    }
+
+    // Ouvre un fil dans le client de lecture configuré (la requête thread:<id> est ajoutée).
+    function open(id) {
+        if (root.readerCommand && root.readerCommand.length > 0)
+            Quickshell.execDetached(["sh", "-c", root.readerCommand + " thread:" + id]);
+        else
+            console.warn("astropath: commande de lecture non configurée (réglages)");
     }
 
     // Liste : search de la requête courante.

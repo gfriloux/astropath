@@ -149,6 +149,12 @@ StyledRect {
                 onTriggered: if (row.notmuch)
                     row.notmuch.trash(row.thread.id)
             }
+            ActionButton {
+                icon: "open_in_new"
+                hoverColor: Theme.primary
+                onTriggered: if (row.notmuch)
+                    row.notmuch.open(row.thread.id)
+            }
         }
     }
 }
