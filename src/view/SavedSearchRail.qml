@@ -27,11 +27,26 @@ Column {
             color: selected ? Theme.primarySelected : (itemArea.containsMouse ? Theme.surfaceContainerHigh : "transparent")
 
             StyledText {
+                id: countText
+                anchors.right: parent.right
+                anchors.rightMargin: Theme.spacingM
+                anchors.verticalCenter: parent.verticalCenter
+                visible: item.modelData.count > 0
+                text: item.modelData.count
+                font.family: Theme.monoFontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                color: item.selected ? Theme.primary : Theme.surfaceTextMedium
+            }
+
+            StyledText {
                 id: label
                 anchors.left: parent.left
                 anchors.leftMargin: Theme.spacingM
+                anchors.right: countText.visible ? countText.left : parent.right
+                anchors.rightMargin: Theme.spacingS
                 anchors.verticalCenter: parent.verticalCenter
                 text: item.modelData.label
+                elide: Text.ElideRight
                 font.pixelSize: Theme.fontSizeMedium
                 color: item.selected ? Theme.primary : Theme.surfaceText
             }

@@ -24,7 +24,10 @@ QtObject {
     // Définitions des smart folders : injectées depuis la config (settings du plugin).
     // Le widget fournit un défaut universel si la config est vide.
     property var definitions: []
-    readonly property var savedSearches: Model.savedSearches(definitions, ({}))
+    property var counts: ({})
+    readonly property var savedSearches: Model.savedSearches(definitions, counts)
+
+    onDefinitionsChanged: refreshCounts()
 
     // Commande du client de lecture (config) — pour ouvrir un fil.
     property string readerCommand: ""
@@ -40,6 +43,58 @@ QtObject {
     function refresh() {
         runSearch();
         unreadProc.running = true;
+        refreshCounts();
+    }
+
+    // Compteurs des smart folders : une seule séquence à la fois (non-réentrant). Si on
+    // redemande pendant un calcul, on relance après, avec les définitions à jour.
+    property bool _counting: false
+    property bool _countPending: false
+    property var _countCb: null
+
+    function refreshCounts() {
+        if (root._counting) {
+            root._countPending = true;
+            return;
+        }
+        _startCounts();
+    }
+    function _startCounts() {
+        var defs = (definitions || []).slice(); // snapshot cohérent
+        if (defs.length === 0) {
+            root.counts = {};
+            root._counting = false;
+            return;
+        }
+        root._counting = true;
+        root._countPending = false;
+        var acc = {};
+        var i = 0;
+        function step() {
+            if (i >= defs.length) {
+                root.counts = acc;
+                root._counting = false;
+                if (root._countPending)
+                    root._startCounts();
+                return;
+            }
+            var def = defs[i];
+            root._countCb = function (text) {
+                acc[def.key] = Model.parseCount(text);
+                i++;
+                step();
+            };
+            countProc.command = ["notmuch"].concat(Queries.count(def.query));
+            countProc.running = true;
+        }
+        step();
+    }
+    property Process countProc: Process {
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: if (root._countCb)
+                root._countCb(text)
+        }
     }
 
     function setQuery(q) {
