@@ -1,0 +1,12 @@
+# Nix
+/result
+/result-*
+.direnv
+.envrc
+
+# Scratch — design handoffs, notes, sorties de travail (jamais commité)
+tmp/
+
+# Éditeurs
+*.qmlc
+*.jsc
