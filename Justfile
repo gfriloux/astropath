@@ -24,15 +24,19 @@ fmt-check:
 lint:
     @find src -name '*.qml' -print0 2>/dev/null | xargs -0 -r qmllint
 
-# Tests : golden sur la couche données (fixtures notmuch) + Qt Quick Test.
+# Tests golden : qmltestrunner exécute les transforms JS sur fixtures → compare aux goldens.
 test:
-    @find tests -name '*.qml' -print0 2>/dev/null | xargs -0 -r qmltestrunner -input || true
-    @echo "TODO: golden tests notmuch (cf. PROCEDURE_PLANS.md §golden)"
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! find tests -name 'tst_*.qml' 2>/dev/null | grep -q .; then
+        echo "aucun test (tests/tst_*.qml absent)"; exit 0
+    fi
+    QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 qmltestrunner -input tests
 
 # Lance le widget dans Quickshell pour essai manuel.
 run:
     quickshell -p src/shell.qml
 
-# Régénère les fixtures golden après un changement intentionnel (relire le diff).
+# Régénère les goldens depuis les fixtures (transform courant). Relire le diff ensuite.
 bless:
-    BLESS=1 just test
+    QML_XHR_ALLOW_FILE_READ=1 quickshell -p bless.qml
