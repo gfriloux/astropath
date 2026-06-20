@@ -87,7 +87,7 @@ tests/golden/<cas>.json      ← modèle de domaine attendu
 
 **On automatise** : parsing notmuch → modèle, logique de tags/compteurs/états,
 construction des requêtes. **On n'automatise pas** : le rendu QML pixel-perfect,
-l'ouverture réelle d'`alot`, la vraie synchro offlineimap/imapnotify, le lancement
+l'ouverture réelle du client externe, la vraie synchro offlineimap/imapnotify, le lancement
 Quickshell sur Wayland. Ces points partent dans `manual_tests.md`.
 
 ---
@@ -152,8 +152,9 @@ just ci          # les trois d'affilée
 ## 8. Ce qui ne change pas entre les versions
 
 - **DESIGN.md fait foi.** Hors invariants → non.
-- **Mono-compte, tag-only, notmuch source de vérité, lecture dans alot** : invariants
-  durs (cf. DESIGN.md). Les remettre en cause = décision DESIGN explicite, pas un PLAN d'impl.
+- **Tag-only, notmuch source de vérité, agnostique au compte** : invariants durs
+  (cf. DESIGN.md). La délégation de la lecture à un client externe (`alot` aujourd'hui) est
+  une décision de périmètre **révisable**. La changer = décision DESIGN explicite, pas un PLAN d'impl.
 - **Git hybride** : branche + commits atomiques par Claude ; merge/push/tag par l'utilisateur.
 - **Nix** : toujours `nix develop --command …` pour les commandes non interactives.
 - **`tmp/`** : scratch non commité (handoffs design, notes, sorties de travail).

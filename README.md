@@ -1,8 +1,8 @@
 # astropath
 
 Widget mail pour **Quickshell / DankMaterialShell**. Un badge de non-lus dans la barre,
-un popup pour scanner les fils, chercher, retaguer et ouvrir un mail dans `alot`. Les
-données viennent de **notmuch** (Maildir indexé) ; tout raisonne par **fil** et par **tag**.
+un popup pour scanner les fils, chercher, retaguer et ouvrir un mail. Les données viennent
+de **notmuch** (Maildir indexé) ; tout raisonne par **fil** et par **tag**.
 
 > Le warp est calme. L'astropathicus veille.
 
@@ -11,7 +11,8 @@ données viennent de **notmuch** (Maildir indexé) ; tout raisonne par **fil** e
 - **Vue** : QML / Qt Quick via [Quickshell](https://quickshell.outfoxxed.me/), Material 3,
   thème Catppuccin Mocha.
 - **Données** : `notmuch` (lecture + mutation de tags). Synchro assurée par `offlineimap`
-  + `imapnotify` ; lecture/rédaction déléguées à `alot`. astropath n'est **pas** un MUA.
+  + `imapnotify`. L'ouverture d'un fil délègue à un client mail externe configurable
+  (`alot` actuellement) ; astropath est une surface de **triage**, pas un client complet.
 
 Architecture, invariants et système visuel : [`DESIGN.md`](./DESIGN.md).
 

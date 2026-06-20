@@ -11,26 +11,27 @@
 astropath est un **widget de visu rapide des mails** pour la barre de bureau
 **Quickshell / DankMaterialShell** (Material 3, thème Catppuccin Mocha). Une icône
 dans la barre affiche un **badge de non-lus** ; au clic, un **popup** ancré sous
-l'icône liste les fils non-lus, permet de chercher, de retaguer et d'ouvrir un fil
-dans le vrai client.
+l'icône liste les fils non-lus, permet de chercher, de retaguer et d'ouvrir un fil.
 
 La source de vérité est la **base notmuch** (index Xapian sur un Maildir). astropath
 ne parle qu'à `notmuch` : il lit (`notmuch search`/`count`/`show --format=json`) et
 mute des tags (`notmuch tag`). Tout raisonne par **fil (thread)** et par **tag**,
 jamais par dossier.
 
+astropath est une **surface de triage** au-dessus de notmuch. Comment un fil s'ouvre
+ensuite (client de lecture, commande lancée) est de la **configuration**, pas du design :
+ce document n'en parle pas.
+
 Ce n'est **pas** :
 
-- Un client mail complet (MUA). La lecture/rédaction se fait dans **`alot`**, ouvert
-  par astropath — astropath n'affiche pas le corps complet, ne compose pas, n'envoie rien.
 - Un client IMAP/SMTP. astropath ne parle pas au réseau : la synchro est le travail
   d'**offlineimap** (fetch) et d'**imapnotify** (push/notification). astropath observe
   leur état, il ne les pilote pas au-delà d'un refresh manuel.
 - Un gestionnaire de dossiers. Le modèle est **tag-only**. « Archiver » = retirer
   `tag:inbox`, pas déplacer un fichier.
 
-Un seul compte configuré. Mono-compte est un **invariant** de la v1 —
-aucune abstraction multi-compte tant qu'un second compte n'est pas un objectif explicite.
+Aujourd'hui un seul compte est configuré, mais rien dans le
+modèle ne le suppose : voir l'invariant *agnostique au compte* ci-dessous.
 
 ---
 
@@ -83,8 +84,11 @@ DankMaterialShell.
 3. **Les smart folders sont des tags.** `Inbox`, `Job`, `Achats`, `Humanité`,
    `Mailing lists`, `EGIT`, `Flaggés`, `Spam` = des requêtes `tag:…` avec compteur,
    pas des entités stockées.
-4. **Lecture déléguée à alot.** Ouvrir un fil = lancer `alot` sur ce fil. astropath
-   ne rend jamais le corps d'un message.
+4. **Agnostique au compte.** astropath ne modélise pas les comptes : un compte n'est
+   qu'une facette de requête notmuch (chemin ou tag). Mono ou multi-compte se modélisent
+   via les recherches sauvegardées, sans traitement spécial — conséquence directe du
+   raisonnement tag-only. Des vues par compte plus riches (badges séparés, bascule) seront
+   des PLANs si le besoin émerge.
 5. **Best-effort sur la synchro.** L'état de synchro (`live | idle | syncing | error`)
    est *observé* (imapnotify / offlineimap / `notmuch new`). Une synchro indisponible
    dégrade l'affichage, ne fait jamais planter le widget.

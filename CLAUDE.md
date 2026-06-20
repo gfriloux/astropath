@@ -8,9 +8,10 @@ Guidage pour Claude Code (claude.ai/code) dans ce dépôt.
 ## Ce qu'est astropath
 
 Widget mail pour **Quickshell / DankMaterialShell** : badge de non-lus dans la barre +
-popup. Données via **notmuch** (Maildir indexé), raisonnement **par fil et par tag**.
-Mono-compte. Lecture dans **alot**. Synchro **offlineimap** + **imapnotify**. Détails et
-invariants : `DESIGN.md`.
+popup. Données via **notmuch** (Maildir indexé), raisonnement **par fil et par tag**
+(agnostique au compte). Synchro **offlineimap** + **imapnotify**. L'ouverture d'un fil
+délègue à un client externe configurable (`alot` actuellement). Détails et invariants :
+`DESIGN.md`.
 
 ## Pile & structure
 
@@ -51,8 +52,10 @@ Le `Justfile` est la **seule** définition des gates ; pre-commit et la CI l'app
 
 ## Garde-fous (ce qui ne change pas)
 
-- **DESIGN.md fait foi.** Hors invariants → non. Mono-compte, tag-only, notmuch source de
-  vérité, lecture déléguée à alot : invariants durs.
+- **DESIGN.md fait foi.** Hors invariants → non. Tag-only, notmuch source de vérité,
+  **agnostique au compte** (un compte = une facette de requête, donc multi-compte par
+  construction) : invariants durs. Le client de lecture (`alot` aujourd'hui) est une
+  décision de périmètre **révisable**, pas un invariant.
 - **Git : hybride.** Claude travaille sur une **branche dédiée**, commite **atomiquement**
   (Conventional Commits, cf. PROCEDURE_PLANS.md §3), et ne fait **jamais** `merge`/`push`/`tag`.
   L'utilisateur relit, merge sur `main`, push.
