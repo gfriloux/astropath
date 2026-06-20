@@ -24,10 +24,13 @@ StyledRect {
 
     readonly property bool active: row.ListView.isCurrentItem
     readonly property string snippet: (notmuch && notmuch.snippets[thread.id]) ? notmuch.snippets[thread.id] : ""
+    property bool retagging: false
 
     // Récupère le snippet (notmuch show paresseux) quand le fil devient courant.
     onActiveChanged: if (active && notmuch)
         notmuch.fetchSnippet(thread.id)
+    onRetaggingChanged: if (retagging)
+        retagField.forceActiveFocus()
 
     width: ListView.view ? ListView.view.width : implicitWidth
     implicitHeight: layout.implicitHeight + Theme.spacingM * 2
@@ -226,43 +229,74 @@ StyledRect {
             id: actionBar
             width: parent.width
             visible: rowHover.hovered || row.active
-            implicitHeight: visible ? actions.implicitHeight : 0
+            implicitHeight: visible ? abCol.implicitHeight : 0
 
-            Row {
-                id: actions
-                anchors.right: parent.right
+            Column {
+                id: abCol
+                width: parent.width
                 spacing: Theme.spacingXS
 
-                ActionButton {
-                    visible: row.thread.unread
-                    icon: "mark_email_read"
-                    hoverColor: Theme.success
-                    onTriggered: if (row.notmuch)
-                        row.notmuch.markRead(row.thread.id)
+                Row {
+                    id: actions
+                    anchors.right: parent.right
+                    spacing: Theme.spacingXS
+
+                    ActionButton {
+                        visible: row.thread.unread
+                        icon: "mark_email_read"
+                        hoverColor: Theme.success
+                        onTriggered: if (row.notmuch)
+                            row.notmuch.markRead(row.thread.id)
+                    }
+                    ActionButton {
+                        icon: "archive"
+                        hoverColor: Theme.info
+                        onTriggered: if (row.notmuch)
+                            row.notmuch.archive(row.thread.id)
+                    }
+                    ActionButton {
+                        icon: "flag"
+                        hoverColor: Theme.warning
+                        onTriggered: if (row.notmuch)
+                            row.notmuch.toggleFlag(row.thread.id, row.thread.flagged)
+                    }
+                    ActionButton {
+                        icon: "sell"
+                        hoverColor: Theme.primary
+                        onTriggered: row.retagging = !row.retagging
+                    }
+                    ActionButton {
+                        icon: "delete"
+                        hoverColor: Theme.error
+                        onTriggered: if (row.notmuch)
+                            row.notmuch.trash(row.thread.id)
+                    }
+                    ActionButton {
+                        icon: "open_in_new"
+                        hoverColor: Theme.primary
+                        onTriggered: if (row.notmuch)
+                            row.notmuch.open(row.thread.id)
+                    }
                 }
-                ActionButton {
-                    icon: "archive"
-                    hoverColor: Theme.info
-                    onTriggered: if (row.notmuch)
-                        row.notmuch.archive(row.thread.id)
-                }
-                ActionButton {
-                    icon: "flag"
-                    hoverColor: Theme.warning
-                    onTriggered: if (row.notmuch)
-                        row.notmuch.toggleFlag(row.thread.id, row.thread.flagged)
-                }
-                ActionButton {
-                    icon: "delete"
-                    hoverColor: Theme.error
-                    onTriggered: if (row.notmuch)
-                        row.notmuch.trash(row.thread.id)
-                }
-                ActionButton {
-                    icon: "open_in_new"
-                    hoverColor: Theme.primary
-                    onTriggered: if (row.notmuch)
-                        row.notmuch.open(row.thread.id)
+
+                // Éditeur de retag inline : « +tag -tag » puis Entrée.
+                DankTextField {
+                    id: retagField
+                    visible: row.retagging
+                    width: parent.width
+                    placeholderText: "+tag -tag puis Entrée"
+                    font.family: Theme.monoFontFamily
+
+                    Keys.onReturnPressed: {
+                        if (row.notmuch)
+                            row.notmuch.tag(row.thread.id, Format.parseRetag(text));
+                        row.retagging = false;
+                        text = "";
+                    }
+                    Keys.onEscapePressed: {
+                        row.retagging = false;
+                        text = "";
+                    }
                 }
             }
         }

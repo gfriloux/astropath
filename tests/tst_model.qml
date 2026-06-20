@@ -45,6 +45,15 @@ TestCase {
         verify(m["spam"] === undefined); // sans couleur ignorée
     }
 
+    function test_parseRetag() {
+        var r = Format.parseRetag("+work -inbox spam");
+        compare(JSON.stringify(r.add), JSON.stringify(["work", "spam"]));
+        compare(JSON.stringify(r.remove), JSON.stringify(["inbox"]));
+        var e = Format.parseRetag("  ");
+        compare(e.add.length, 0);
+        compare(e.remove.length, 0);
+    }
+
     function test_colorIndex() {
         // Déterministe et borné.
         compare(Format.colorIndex("alice", 6), Format.colorIndex("alice", 6));

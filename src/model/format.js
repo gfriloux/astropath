@@ -29,6 +29,30 @@ function initials(authors) {
     return first.slice(0, 2).toUpperCase();
 }
 
+// Parse une saisie de retag « +a -b c » → { add: [...], remove: [...] } (bare = add).
+function parseRetag(str) {
+    var add = [];
+    var remove = [];
+    String(str || "").split(/\s+/).forEach(function (tok) {
+        tok = tok.trim();
+        if (!tok)
+            return;
+        if (tok[0] === "-") {
+            if (tok.length > 1)
+                remove.push(tok.slice(1));
+        } else if (tok[0] === "+") {
+            if (tok.length > 1)
+                add.push(tok.slice(1));
+        } else {
+            add.push(tok);
+        }
+    });
+    return {
+        "add": add,
+        "remove": remove
+    };
+}
+
 // Index de couleur déterministe (hash du nom mod n) pour la teinte de l'avatar.
 function colorIndex(name, n) {
     if (n <= 0)
