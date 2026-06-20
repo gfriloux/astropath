@@ -64,13 +64,12 @@ On ne code pas sans plan validé. Lire [`DESIGN.md`](./DESIGN.md) puis
 **hybride** : travail sur branche dédiée, commits atomiques (Conventional Commits),
 merge/push/tag réservés au mainteneur.
 
-## Roadmap outillage
+## Release
 
-Démarrage **lean** : `flake.nix`, `Justfile`, pre-commit, CI minimale, module
-home-manager. À ajouter au **premier tag** :
-
-- `renovate.json` — MAJ de dépendances groupées.
-- `cliff.toml` + workflow release — changelog auto depuis les Conventional Commits.
+- **Changelog** : Conventional Commits → `CHANGELOG.md` via `git-cliff` (`just changelog`).
+- **Release** : sur tag `v*`, le workflow GitHub génère les notes (git-cliff) et crée la
+  release. Pas d'artefact binaire (le plugin = source ; install via flake épinglé au tag).
+- **Dépendances** : Renovate (flake.lock + GitHub Actions, MAJ groupées hebdomadaires).
 
 ## Licence
 

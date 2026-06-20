@@ -1,7 +1,7 @@
 # Plan : outillage de release + tag v0.4.0
 
 **Type :** outillage (CI/CD, pas de code applicatif)
-**Statut :** en attente de validation
+**Statut :** Terminé (2026-06-20) — reste le tag par l'utilisateur
 
 ## Contexte
 
@@ -54,8 +54,14 @@ artefact binaire (le plugin = source, pas de build).
 
 ## Portes de qualité (clôture)
 
-- [ ] `renovate.json` / YAML release valides ; `nix flake check` passe
-- [ ] `just changelog` génère un CHANGELOG cohérent
-- [ ] `just ci` vert
-- [ ] Commits atomiques sur `feat/release`, signés `+code`
-- [ ] Branche mergée sur `main`, puis tag `v0.4.0` poussé (release auto vérifiée)
+- [x] `renovate.json` valide ; `nix flake check` passe
+- [x] `just changelog` génère un CHANGELOG cohérent (tag v0.4.0)
+- [x] `just ci` vert
+- [x] Commits atomiques sur `feat/release`, signés `+code`
+- [ ] Branche mergée sur `main`, puis tag `v0.4.0` poussé (release auto à vérifier)
+
+## Bilan
+
+`renovate.json` (nix + github-actions, groupé), `cliff.toml` + `git-cliff` (dev shell +
+`just changelog`) + `CHANGELOG.md`, workflow `release.yml` (notes git-cliff sur tag `v*`).
+README mis à jour. Reste : merge + **tag `v0.4.0`** (par l'utilisateur) → 1re release.
