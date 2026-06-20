@@ -56,6 +56,10 @@ Consigner le résultat dans `.claude/plans/v{X.Y.Z}/phase0_results.md`.
   [Conventional Commits](#convention-de-commit). Chaque commit passe les portes seul.
 - Claude ne fait **jamais** `merge`, `push` ni `tag`. L'utilisateur relit, merge sur
   `main` et push.
+- **Un plan se termine toujours par un merge sur `main`.** À la clôture (portes vertes),
+  l'utilisateur merge la branche du plan sur `main` et push, **avant** de démarrer le plan
+  suivant. On ne laisse pas une branche de plan terminée non mergée : chaque plan part d'un
+  `main` à jour.
 
 ### Convention de commit
 
