@@ -1,5 +1,5 @@
-// Popout cockpit. Phase 4 : en-tête télémétrie + refresh + liste de fils non-lus + pied.
-// Rail, recherche et actions arrivent aux phases suivantes.
+// Popout cockpit. Phase 5 : en-tête + refresh + rail recherches sauvegardées + liste de
+// fils (requête courante) + pied. Recherche, actions et settings arrivent ensuite.
 // Reçoit le service Notmuch en propriété (data → view, le QML n'appelle pas notmuch direct).
 import QtQuick
 import qs.Common
@@ -57,17 +57,30 @@ PopoutComponent {
             font.pixelSize: Theme.fontSizeSmall
         }
 
-        // Liste des fils non-lus.
-        DankListView {
+        // Rail gauche : recherches sauvegardées.
+        SavedSearchRail {
+            id: rail
             anchors.top: toolbar.bottom
             anchors.bottom: footer.top
             anchors.left: parent.left
+            anchors.topMargin: Theme.spacingS
+            anchors.bottomMargin: Theme.spacingS
+            width: 172
+            notmuch: cockpit.notmuch
+        }
+
+        // Liste des fils de la requête courante.
+        DankListView {
+            anchors.top: toolbar.bottom
+            anchors.bottom: footer.top
+            anchors.left: rail.right
             anchors.right: parent.right
+            anchors.leftMargin: Theme.spacingM
             anchors.topMargin: Theme.spacingS
             anchors.bottomMargin: Theme.spacingS
             clip: true
             spacing: Theme.spacingXS
-            model: cockpit.notmuch ? cockpit.notmuch.unreadThreads : []
+            model: cockpit.notmuch ? cockpit.notmuch.threads : []
             delegate: ThreadRow {}
         }
     }
