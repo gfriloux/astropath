@@ -23,6 +23,11 @@ StyledRect {
     readonly property color avatarColor: avatarPalette[Format.colorIndex(thread.authors, avatarPalette.length)]
 
     readonly property bool active: row.ListView.isCurrentItem
+    readonly property string snippet: (notmuch && notmuch.snippets[thread.id]) ? notmuch.snippets[thread.id] : ""
+
+    // Récupère le snippet (notmuch show paresseux) quand le fil devient courant.
+    onActiveChanged: if (active && notmuch)
+        notmuch.fetchSnippet(thread.id)
 
     width: ListView.view ? ListView.view.width : implicitWidth
     implicitHeight: layout.implicitHeight + Theme.spacingM * 2
@@ -164,6 +169,18 @@ StyledRect {
                     text: row.thread.subject
                     font.pixelSize: Theme.fontSizeMedium
                     color: row.thread.unread ? Theme.surfaceText : Theme.surfaceTextMedium
+                    elide: Text.ElideRight
+                }
+
+                // Snippet (notmuch show), affiché sur l'élément courant.
+                StyledText {
+                    width: parent.width
+                    visible: row.active && row.snippet.length > 0
+                    text: row.snippet
+                    font.pixelSize: Theme.fontSizeSmall
+                    color: Theme.surfaceTextMedium
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 2
                     elide: Text.ElideRight
                 }
 

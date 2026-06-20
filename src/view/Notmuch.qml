@@ -146,6 +146,33 @@ QtObject {
             console.warn("astropath: commande de lecture non configurée (réglages)");
     }
 
+    // Snippets paresseux : récupérés via notmuch show pour l'élément courant uniquement
+    // (1 process à la fois, mis en cache par id de fil).
+    property var snippets: ({})
+    property string _snippetId: ""
+    function fetchSnippet(id) {
+        if (!id || root.snippets[id] !== undefined)
+            return;
+        root._snippetId = id;
+        showProc.command = ["notmuch"].concat(Queries.showThread(id));
+        showProc.running = true;
+    }
+    property Process showProc: Process {
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    var detail = Model.parseShow(JSON.parse(text));
+                    var m = Object.assign({}, root.snippets);
+                    m[root._snippetId] = detail.snippet;
+                    root.snippets = m;
+                } catch (e) {
+                    console.warn("astropath: parse show échoué:", e);
+                }
+            }
+        }
+    }
+
     // Liste : search de la requête courante.
     property Process searchProc: Process {
         running: false
