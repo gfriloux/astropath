@@ -1,0 +1,6 @@
+{
+  "snippet": "Bonjour, Ceci est un corps de message de test sur plusieurs lignes pour vérifier la génération du snippet. Cordialement.",
+  "subject": "Sujet de test numéro un",
+  "from": "Alice Exemple <alice@example.test>",
+  "date": "Wed, 15 Nov 2023 10:00:00 +0100"
+}

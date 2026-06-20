@@ -1,0 +1,46 @@
+[
+  [
+    [
+      {
+        "id": "msg-a@example.test",
+        "match": true,
+        "filename": ["/mail/cur/0001"],
+        "timestamp": 1700000000,
+        "date_relative": "12 mins. ago",
+        "tags": ["inbox", "unread"],
+        "headers": {
+          "Subject": "Sujet de test numéro un",
+          "From": "Alice Exemple <alice@example.test>",
+          "To": "destinataire@example.test",
+          "Date": "Wed, 15 Nov 2023 10:00:00 +0100"
+        },
+        "body": [
+          {
+            "id": 1,
+            "content-type": "text/plain",
+            "content": "Bonjour,\n\nCeci est un corps de message de test sur plusieurs lignes\npour vérifier la génération du snippet.\n\nCordialement."
+          }
+        ]
+      },
+      [
+        [
+          {
+            "id": "msg-a-reply@example.test",
+            "match": false,
+            "timestamp": 1700001000,
+            "tags": ["inbox"],
+            "headers": {
+              "Subject": "Re: Sujet de test numéro un",
+              "From": "Bob Exemple <bob@example.test>",
+              "Date": "Wed, 15 Nov 2023 10:30:00 +0100"
+            },
+            "body": [
+              { "id": 1, "content-type": "text/plain", "content": "Réponse de test." }
+            ]
+          },
+          []
+        ]
+      ]
+    ]
+  ]
+]

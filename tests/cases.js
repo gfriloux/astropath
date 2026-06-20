@@ -12,5 +12,6 @@ var cases = [
         transform: function (input) {
             return Model.savedSearches(input.definitions, input.counts);
         }
-    }
+    },
+    { name: "show-thread", transform: Model.parseShow }
 ];
