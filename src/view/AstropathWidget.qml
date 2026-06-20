@@ -9,8 +9,12 @@ import qs.Modules.Plugins
 PluginComponent {
     id: root
 
-    // Phase 1 : compteur factice. Câblé sur notmuch (Process) en Phase 2.
-    property int unreadCount: 3
+    // Compteur de fils non-lus, alimenté par le service Notmuch (polling).
+    readonly property int unreadCount: notmuch.unreadCount
+
+    Notmuch {
+        id: notmuch
+    }
 
     horizontalBarPill: Component {
         Item {
