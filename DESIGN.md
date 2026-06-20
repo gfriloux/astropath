@@ -16,7 +16,9 @@ l'icône liste les fils non-lus, permet de chercher, de retaguer et d'ouvrir un 
 La source de vérité est la **base notmuch** (index Xapian sur un Maildir). astropath
 ne parle qu'à `notmuch` : il lit (`notmuch search`/`count`/`show --format=json`) et
 mute des tags (`notmuch tag`). Tout raisonne par **fil (thread)** et par **tag**,
-jamais par dossier.
+jamais par dossier. astropath **n'indexe jamais** (pas de `notmuch new`) : l'indexation
+des nouveaux mails est le travail de la machinerie de synchro externe (offlineimap /
+imapnotify). Le rafraîchissement se fait par **polling** (re-query périodique).
 
 astropath est une **surface de triage** au-dessus de notmuch. Comment un fil s'ouvre
 ensuite (client de lecture, commande lancée) est de la **configuration**, pas du design :
@@ -75,19 +77,26 @@ DankMaterialShell.
 
 ### Implémentation
 
+astropath est un **plugin DankMaterialShell** (`plugin.json` à la racine + `src/`),
+installé dans `~/.config/DankMaterialShell/plugins/Astropath/`. Il hérite du thème
+(Catppuccin Mocha) et des composants Material 3 de DMS.
+
 - `query` → `src/query/queries.js` : builders d'argv notmuch (search/count/show/tag),
-  fonctions pures. L'exécution réelle (`Process` quickshell) arrive avec la vue.
-- `model` → `src/model/threads.js` : `parseSearch`, `parseCount`, `savedSearches`
-  (définitions injectées = config), `parseShow` (snippet). Pur, testé par goldens
-  (`tests/`, `just test` / `just bless`).
-- `view` → à venir en **v0.2.0** (cockpit QML).
+  fonctions pures. Exécutés par `src/view/Notmuch.qml` (`Process` quickshell + `StdioCollector`).
+- `model` → `src/model/threads.js` (`parseSearch`, `parseCount`, `savedSearches` à
+  définitions injectées = config, `parseShow`) + `format.js` (`relativeTime`). Pur, testé
+  par goldens/unitaires (`tests/`, `just test` / `just bless`).
+- `view` → `src/view/` : `AstropathWidget` (barre + badge), `Cockpit` (popout : en-tête
+  sync, rail recherches, recherche live, liste, actions inline, navigation clavier),
+  `Settings` (config : client de lecture, intervalle, smart folders). Thème = DMS.
 
 ---
 
 ## Invariants du domaine
 
-1. **notmuch fait foi.** Toute donnée affichée vient de notmuch. Pas de cache parallèle
-   qui pourrait diverger de la base.
+1. **notmuch fait foi ; lecture + tags seulement.** Toute donnée affichée vient de notmuch
+   (pas de cache parallèle). astropath query (lecture) et `notmuch tag` (mutation), rien
+   d'autre — **jamais `notmuch new`** : il n'indexe pas, c'est le rôle de la synchro externe.
 2. **Tag-only.** Aucune notion de dossier. Les actions sont des mutations de tags :
    lu = `-unread`, archiver = `-inbox`, flag = `+flagged`, spam = `+spam`, etc.
 3. **Les smart folders sont des tags.** Les vues universelles (`Inbox`, `Flaggés`,

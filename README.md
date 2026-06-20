@@ -27,16 +27,35 @@ just ci         # format + lint + test
 just run        # lance le widget pour essai manuel
 ```
 
-Hooks pre-commit : `pre-commit install`.
+Hooks pre-commit : `pre-commit install`. `just run` lie le plugin dans le dossier DMS,
+`just reload` recharge DMS (le toggle plugin ne relit pas le QML).
+
+## Installation
+
+astropath est un **plugin DankMaterialShell**. Via le module home-manager :
+
+```nix
+inputs.astropath.url = "github:gfriloux/astropath";
+
+# config home-manager :
+imports = [ inputs.astropath.homeModules.default ];
+programs.astropath.enable = true;
+```
+
+Le module installe le plugin dans `~/.config/DankMaterialShell/plugins/Astropath/` ;
+il reste à l'**activer dans DMS** (Settings → Plugins → Astropath) et à configurer le
+client de lecture + les smart folders dans ses réglages.
 
 ## Structure du code
 
+- `plugin.json` — manifest du plugin DMS (type widget, permissions, icône).
 - `src/query/` — construction des commandes notmuch (argv), JS pur.
-- `src/model/` — transforms `notmuch` JSON → modèle de fils (`parseSearch`, `parseCount`,
-  `savedSearches`, `parseShow`), JS pur testé par goldens.
-- `src/view/` — vue cockpit QML *(à venir, v0.2.0)*.
+- `src/model/` — transforms `notmuch` JSON → modèle (`parseSearch`/`parseCount`/
+  `savedSearches`/`parseShow`) + `format.js`, JS pur testé par goldens.
+- `src/view/` — plugin QML : widget barre, cockpit (popout), réglages. Thème hérité de DMS.
 - `tests/` — fixtures notmuch + goldens. `just test` (qmltestrunner), `just bless`
-  (régénère les goldens). Données de test synthétiques.
+  (régénère). Données de test synthétiques.
+- `nix/hm-module.nix` — module home-manager (installe le plugin).
 
 ## Contribution
 
@@ -47,12 +66,11 @@ merge/push/tag réservés au mainteneur.
 
 ## Roadmap outillage
 
-Démarrage **lean** : `flake.nix`, `Justfile`, pre-commit, CI minimale. À ajouter au
-**premier tag** (`v0.1.0`) :
+Démarrage **lean** : `flake.nix`, `Justfile`, pre-commit, CI minimale, module
+home-manager. À ajouter au **premier tag** :
 
 - `renovate.json` — MAJ de dépendances groupées.
 - `cliff.toml` + workflow release — changelog auto depuis les Conventional Commits.
-- `nix/hm-module.nix` — module home-manager pour installer le widget.
 
 ## Licence
 

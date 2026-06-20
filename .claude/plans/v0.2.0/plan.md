@@ -1,7 +1,7 @@
 # Plan : v0.2.0 — cockpit (plugin DankMaterialShell)
 
 **Type :** vue + glue I/O (étage `view` + exécution notmuch réelle)
-**Statut :** en attente de validation
+**Statut :** Terminé (2026-06-20)
 
 ## Contexte
 
@@ -96,9 +96,22 @@ multi-compte (reste agnostique mais pas d'UI dédiée) ; thème (hérité de DMS
 
 ## Portes de qualité (clôture)
 
-- [ ] `just ci` passe (golden data-layer + tout JS pur ajouté)
-- [ ] `qmllint` vue propre (avec `-I` DMS)
-- [ ] `manual_tests.md` exécuté (cockpit réel dans DMS)
-- [ ] Doc synchronisée ; invariant « pas de notmuch new » dans DESIGN.md
-- [ ] Commits atomiques sur `feat/cockpit`, signés `+code`
-- [ ] Branche mergée sur `main` à la clôture
+- [x] `just ci` passe (golden data-layer + JS pur ajouté : `relativeTime`)
+- [x] `qmllint` : la vue ne peut pas être validée statiquement contre les types DMS
+  (résolution runtime `qs.*`) → filet anti-syntaxe seulement, validation = DMS réel
+- [x] `manual_tests.md` exécuté (cockpit réel dans DMS, validé pas à pas)
+- [x] Doc synchronisée ; invariant « pas de notmuch new » dans DESIGN.md
+- [x] Commits atomiques sur `feat/cockpit`, signés `+code`
+- [ ] Branche mergée sur `main` à la clôture (par l'utilisateur)
+
+## Bilan
+
+Cockpit livré comme **plugin DankMaterialShell** : widget barre + badge, popout
+(en-tête sync « il y a N min », rail recherches sauvegardées, recherche live, liste de
+fils, actions inline, navigation clavier), réglages (client de lecture, intervalle,
+éditeur de smart folders avec pastilles couleur). Service Notmuch (Process + polling,
+jamais `notmuch new`). Module home-manager pour l'installation.
+
+**Reportés (finition / v0.3.0)** : compteurs par recherche dans le rail, snippet via
+`notmuch show`, chips de tags colorés depuis la config, VIP, retag, passe de finition
+graphique fidèle au proto, focus clavier auto à l'ouverture (limite Wayland/DMS).
