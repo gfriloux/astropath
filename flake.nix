@@ -21,8 +21,8 @@
         "aarch64-linux"
       ];
 
-      # Le module home-manager sera ajouté au premier packaging (cf. PROCEDURE_PLANS.md).
-      # flake.homeModules.default = import ./nix/hm-module.nix;
+      # Module home-manager : installe astropath comme plugin DankMaterialShell.
+      flake.homeModules.default = import ./nix/hm-module.nix;
 
       perSystem = {pkgs, ...}: {
         formatter = pkgs.alejandra;
