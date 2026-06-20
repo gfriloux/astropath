@@ -1,0 +1,13 @@
+{
+  "id": "astropath",
+  "name": "Astropath",
+  "description": "Visu rapide des mails notmuch — triage par fil et par tag",
+  "version": "0.2.0",
+  "author": "gfriloux",
+  "type": "widget",
+  "capabilities": ["dankbar-widget"],
+  "component": "./src/view/AstropathWidget.qml",
+  "icon": "mail",
+  "requires": ["notmuch"],
+  "permissions": ["process", "settings_read", "settings_write"]
+}

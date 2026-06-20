@@ -33,9 +33,15 @@ test:
     fi
     QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 qmltestrunner -input tests
 
-# Lance le widget dans Quickshell pour essai manuel.
+# Lie le plugin dans le dossier plugins de DMS pour essai (puis l'activer dans DMS).
 run:
-    quickshell -p src/shell.qml
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dir="${XDG_CONFIG_HOME:-$HOME/.config}/DankMaterialShell/plugins"
+    mkdir -p "$dir"
+    ln -sfn "$PWD" "$dir/Astropath"
+    echo "Plugin lié → $dir/Astropath"
+    echo "Active 'Astropath' dans DMS (Settings → Plugins), puis recharge la barre."
 
 # Régénère les goldens depuis les fixtures (transform courant). Relire le diff ensuite.
 bless:
