@@ -1,7 +1,7 @@
 # Plan : v0.4.0 — enrichissement fonctionnel
 
 **Type :** fonctionnel (étages `model` + `view`)
-**Statut :** en attente de validation
+**Statut :** Terminé (2026-06-20)
 
 ## Contexte
 
@@ -52,7 +52,17 @@ Rendre le cockpit complet : informations riches (compteurs, snippet) et action r
 
 ## Portes de qualité (clôture)
 
-- [ ] `just ci` passe (helpers JS purs testés)
-- [ ] Rendu validé dans DMS (`manual_tests.md`)
-- [ ] Commits atomiques sur `feat/functional`, signés `+code`
-- [ ] Branche mergée sur `main` à la clôture
+- [x] `just ci` passe (helpers `tagColors`/`parseRetag` testés)
+- [x] Rendu validé dans DMS (`manual_tests.md`)
+- [x] Commits atomiques sur `feat/functional`, signés `+code`
+- [ ] Branche mergée sur `main` à la clôture (par l'utilisateur)
+
+## Bilan
+
+Compteurs par recherche dans le rail (count séquentiel non-réentrant) ; chips de tags
+**colorés** depuis la config (`tagColors`) ; **snippet** paresseux (`notmuch show`) sur le
+fil courant ; éditeur de **retag** inline (`+tag -tag` → `notmuch tag`). VIP abandonné
+(superflu). Le cockpit est fonctionnellement complet.
+
+**Reste (backlog)** : passe de finition graphique fidélité-proto plus poussée si besoin ;
+premier **tag / release** (renovate + cliff + workflow).
