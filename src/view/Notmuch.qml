@@ -62,6 +62,11 @@ QtObject {
         runSearch();
     }
 
+    // Recherche libre : texte vide → revient aux non-lus par défaut.
+    function searchText(t) {
+        setQuery(t && t.length > 0 ? t : Queries.UNREAD_QUERY);
+    }
+
     // Liste : search de la requête courante.
     property Process searchProc: Process {
         running: false
