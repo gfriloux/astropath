@@ -41,7 +41,11 @@ run:
     mkdir -p "$dir"
     ln -sfn "$PWD" "$dir/Astropath"
     echo "Plugin lié → $dir/Astropath"
-    echo "Active 'Astropath' dans DMS (Settings → Plugins), puis recharge la barre."
+    echo "Active 'Astropath' dans DMS (Settings → Plugins). Après chaque modif : just reload."
+
+# Recharge DMS (relit les plugins depuis le disque — le toggle ne suffit pas, QML est caché).
+reload:
+    systemctl --user restart dms.service
 
 # Régénère les goldens depuis les fixtures (transform courant). Relire le diff ensuite.
 bless:
