@@ -10,10 +10,10 @@ PluginComponent {
     id: root
 
     // Compteur de fils non-lus, alimenté par le service Notmuch (polling).
-    readonly property int unreadCount: notmuch.unreadCount
+    readonly property int unreadCount: notmuchSvc.unreadCount
 
     Notmuch {
-        id: notmuch
+        id: notmuchSvc
     }
 
     horizontalBarPill: Component {
@@ -55,7 +55,8 @@ PluginComponent {
     // Popout cockpit ouvert au clic sur l'icône.
     popoutContent: Component {
         Cockpit {
-            notmuch: notmuch
+            notmuch: notmuchSvc
+            viewHeight: root.popoutHeight
         }
     }
     popoutWidth: 582
