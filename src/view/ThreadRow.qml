@@ -10,17 +10,42 @@ StyledRect {
     id: row
 
     required property var modelData
+    required property int index
     readonly property var thread: modelData
     property var notmuch: null
 
     width: ListView.view ? ListView.view.width : implicitWidth
     implicitHeight: body.implicitHeight + Theme.spacingM * 2
     radius: Theme.cornerRadius
-    color: rowHover.hovered ? Theme.surfaceContainerHigh : "transparent"
+    color: row.ListView.isCurrentItem ? Theme.primarySelected : (rowHover.hovered ? Theme.surfaceContainerHigh : "transparent")
 
     // Survol passif : reste vrai même au-dessus des boutons d'action enfants.
     HoverHandler {
         id: rowHover
+    }
+
+    // Clic sur un fil : sélectionne et donne le focus clavier à la liste (j/k/⏎/e/#).
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton
+        onClicked: {
+            const v = row.ListView.view;
+            if (v) {
+                v.currentIndex = row.index;
+                v.forceActiveFocus();
+            }
+        }
+    }
+
+    // Bord-gauche mauve sur l'élément sous le curseur clavier.
+    Rectangle {
+        visible: row.ListView.isCurrentItem
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        width: 3
+        height: parent.height - Theme.spacingS
+        radius: 1.5
+        color: Theme.primary
     }
 
     Row {

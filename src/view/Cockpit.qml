@@ -94,8 +94,9 @@ PopoutComponent {
             }
         }
 
-        // Liste des fils de la requête courante.
+        // Liste des fils de la requête courante. Navigation clavier j/k/⏎/e/#.
         DankListView {
+            id: list
             anchors.top: topbar.bottom
             anchors.bottom: footer.top
             anchors.left: rail.right
@@ -105,9 +106,40 @@ PopoutComponent {
             anchors.bottomMargin: Theme.spacingS
             clip: true
             spacing: Theme.spacingXS
+            focus: true
             model: cockpit.notmuch ? cockpit.notmuch.threads : []
             delegate: ThreadRow {
                 notmuch: cockpit.notmuch
+            }
+
+            // La liste prend le focus clavier à l'ouverture du popout.
+            Component.onCompleted: list.forceActiveFocus()
+
+            Keys.onPressed: event => {
+                if (list.count === 0 || !cockpit.notmuch)
+                    return;
+                const i = list.currentIndex;
+                const t = cockpit.notmuch.threads[i];
+                const k = event.text;
+                if (k === "j") {
+                    list.currentIndex = Math.min(list.count - 1, i + 1);
+                    event.accepted = true;
+                } else if (k === "k") {
+                    list.currentIndex = Math.max(0, i - 1);
+                    event.accepted = true;
+                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    if (t)
+                        cockpit.notmuch.open(t.id);
+                    event.accepted = true;
+                } else if (k === "e") {
+                    if (t)
+                        cockpit.notmuch.archive(t.id);
+                    event.accepted = true;
+                } else if (k === "#") {
+                    if (t)
+                        cockpit.notmuch.trash(t.id);
+                    event.accepted = true;
+                }
             }
         }
 
