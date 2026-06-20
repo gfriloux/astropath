@@ -31,6 +31,10 @@ test:
     if ! find tests -name 'tst_*.qml' 2>/dev/null | grep -q .; then
         echo "aucun test (tests/tst_*.qml absent)"; exit 0
     fi
+    # QtTest (TestCase) importe QtQuick.Window : on pointe explicitement le dossier qml de
+    # qtdeclarative (sinon, en CI sans QML2_IMPORT_PATH ambiant, le module est introuvable).
+    qmldir="$(dirname "$(dirname "$(command -v qmltestrunner)")")/lib/qt-6/qml"
+    export QML2_IMPORT_PATH="$qmldir${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
     QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 qmltestrunner -input tests
 
 # Lie le plugin dans le dossier plugins de DMS pour essai (puis l'activer dans DMS).
