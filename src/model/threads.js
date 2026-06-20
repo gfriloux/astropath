@@ -9,7 +9,7 @@ function hasTag(tags, t) {
 
 // notmuch search --format=json (résumé de fils) → Thread[].
 // Champs notmuch : thread, date_relative, total, authors, subject, tags.
-// Le résumé search n'a pas de corps : snippet et vip sont ajoutés ailleurs (show / config).
+// Le résumé search n'a pas de corps : le snippet est ajouté ailleurs (show).
 function parseSearch(rows) {
     return rows.map(function (r) {
         var tags = r.tags || [];
