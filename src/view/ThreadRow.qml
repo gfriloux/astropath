@@ -1,6 +1,7 @@
 // Une ligne de fil dans la liste cockpit. Délégué de DankListView : `modelData` = un objet
 // Thread (sortie de parseSearch). Distinction lu/non-lu, chips de tags (neutres pour
 // l'instant — couleurs depuis la config en Phase 8), flag, heure relative, compteur.
+// Au survol : rangée d'actions sur fond opaque (HoverHandler → pas de clignotement).
 import QtQuick
 import qs.Common
 import qs.Widgets
@@ -10,16 +11,16 @@ StyledRect {
 
     required property var modelData
     readonly property var thread: modelData
+    property var notmuch: null
 
     width: ListView.view ? ListView.view.width : implicitWidth
     implicitHeight: body.implicitHeight + Theme.spacingM * 2
     radius: Theme.cornerRadius
-    color: hover.containsMouse ? Theme.surfaceContainerHigh : "transparent"
+    color: rowHover.hovered ? Theme.surfaceContainerHigh : "transparent"
 
-    MouseArea {
-        id: hover
-        anchors.fill: parent
-        hoverEnabled: true
+    // Survol passif : reste vrai même au-dessus des boutons d'action enfants.
+    HoverHandler {
+        id: rowHover
     }
 
     Row {
@@ -102,6 +103,51 @@ StyledRect {
                     size: Theme.fontSizeMedium
                     color: Theme.warning
                 }
+            }
+        }
+    }
+
+    // Rangée d'actions révélée au survol, sur fond opaque (ne masque pas le texte par
+    // superposition). Ouvrir/retag arrivent en Phase 8.
+    StyledRect {
+        id: actionsBg
+        visible: rowHover.hovered
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: actions.implicitWidth + Theme.spacingM * 2
+        radius: Theme.cornerRadius
+        color: Theme.surfaceContainerHighest
+
+        Row {
+            id: actions
+            anchors.centerIn: parent
+            spacing: Theme.spacingXS
+
+            ActionButton {
+                visible: row.thread.unread
+                icon: "mark_email_read"
+                hoverColor: Theme.success
+                onTriggered: if (row.notmuch)
+                    row.notmuch.markRead(row.thread.id)
+            }
+            ActionButton {
+                icon: "archive"
+                hoverColor: Theme.info
+                onTriggered: if (row.notmuch)
+                    row.notmuch.archive(row.thread.id)
+            }
+            ActionButton {
+                icon: "flag"
+                hoverColor: Theme.warning
+                onTriggered: if (row.notmuch)
+                    row.notmuch.toggleFlag(row.thread.id, row.thread.flagged)
+            }
+            ActionButton {
+                icon: "delete"
+                hoverColor: Theme.error
+                onTriggered: if (row.notmuch)
+                    row.notmuch.trash(row.thread.id)
             }
         }
     }

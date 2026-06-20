@@ -87,7 +87,9 @@ PopoutComponent {
             clip: true
             spacing: Theme.spacingXS
             model: cockpit.notmuch ? cockpit.notmuch.threads : []
-            delegate: ThreadRow {}
+            delegate: ThreadRow {
+                notmuch: cockpit.notmuch
+            }
         }
 
         // Pied : raccourcis clavier (enrichi en Phase 9).

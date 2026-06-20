@@ -67,6 +67,35 @@ QtObject {
         setQuery(t && t.length > 0 ? t : Queries.UNREAD_QUERY);
     }
 
+    // Mutations de tags (tag-only). Après succès → refresh de la liste.
+    function tag(threadId, ops) {
+        tagProc.command = ["notmuch"].concat(Queries.tagThread(threadId, ops));
+        tagProc.running = true;
+    }
+    function markRead(id) {
+        tag(id, {
+            "remove": ["unread"]
+        });
+    }
+    function archive(id) {
+        tag(id, {
+            "remove": ["inbox"]
+        });
+    }
+    function toggleFlag(id, flagged) {
+        tag(id, flagged ? {
+            "remove": ["flagged"]
+        } : {
+            "add": ["flagged"]
+        });
+    }
+    function trash(id) {
+        tag(id, {
+            "add": ["deleted"],
+            "remove": ["inbox", "unread"]
+        });
+    }
+
     // Liste : search de la requête courante.
     property Process searchProc: Process {
         running: false
@@ -96,6 +125,23 @@ QtObject {
         onExited: code => {
             if (code !== 0)
                 root.status = "error";
+        }
+    }
+
+    // Mutation de tags : notmuch tag … -- thread:id.
+    property Process tagProc: Process {
+        running: false
+
+        onExited: code => {
+            if (code === 0)
+                root.refresh();
+            else
+                root.status = "error";
+        }
+
+        stderr: StdioCollector {
+            onStreamFinished: if (text.trim())
+                console.warn("astropath tag:", text.trim())
         }
     }
 
