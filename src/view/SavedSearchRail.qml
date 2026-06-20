@@ -26,16 +26,6 @@ Column {
             radius: Theme.cornerRadius
             color: selected ? Theme.primarySelected : (itemArea.containsMouse ? Theme.surfaceContainerHigh : "transparent")
 
-            Rectangle {
-                visible: item.selected
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                width: 3
-                height: parent.height - Theme.spacingXS
-                radius: 1.5
-                color: Theme.primary
-            }
-
             StyledText {
                 id: label
                 anchors.left: parent.left
