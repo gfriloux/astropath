@@ -41,6 +41,7 @@
             # Outillage projet
             just
             git
+            git-cliff
 
             # Portes Nix (cf. .pre-commit-config.yaml)
             alejandra

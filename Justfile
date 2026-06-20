@@ -51,6 +51,10 @@ run:
 reload:
     systemctl --user restart dms.service
 
+# Régénère CHANGELOG.md depuis les Conventional Commits (git-cliff).
+changelog:
+    git-cliff -o CHANGELOG.md
+
 # Régénère les goldens depuis les fixtures (transform courant). Relire le diff ensuite.
 bless:
     QML_XHR_ALLOW_FILE_READ=1 quickshell -p bless.qml
