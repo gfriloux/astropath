@@ -29,6 +29,22 @@ TestCase {
         compare(Format.initials(""), "?");
     }
 
+    function test_tagColors() {
+        var m = Model.tagColors([{
+                "query": "tag:alpha",
+                "color": "#b4befe"
+            }, {
+                "query": "tag:x and tag:y",
+                "color": "#ffffff"
+            }, {
+                "query": "tag:spam",
+                "color": ""
+            }]);
+        compare(m["alpha"], "#b4befe");
+        verify(m["x"] === undefined); // requête composée ignorée
+        verify(m["spam"] === undefined); // sans couleur ignorée
+    }
+
     function test_colorIndex() {
         // Déterministe et borné.
         compare(Format.colorIndex("alice", 6), Format.colorIndex("alice", 6));

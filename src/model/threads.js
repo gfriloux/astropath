@@ -31,6 +31,21 @@ function parseCount(output) {
     return parseInt(String(output).trim(), 10) || 0;
 }
 
+// Map tag → couleur, dérivée des définitions de smart folders (requêtes simples « tag:X »).
+// Les requêtes composées (espaces) ou sans couleur sont ignorées.
+function tagColors(definitions) {
+    var m = {};
+    (definitions || []).forEach(function (d) {
+        var q = String(d.query || "");
+        if (q.indexOf("tag:") === 0 && q.indexOf(" ") === -1) {
+            var tag = q.slice(4);
+            if (tag && d.color)
+                m[tag] = d.color;
+        }
+    });
+    return m;
+}
+
 // Enrichit des smart folders de leur compteur. Les définitions (label/requête/couleur)
 // sont de la CONFIG utilisateur, injectées — jamais codées en dur ici (le modèle reste
 // générique et agnostique à la taxonomie perso). definitions = [{key,label,query,color}],

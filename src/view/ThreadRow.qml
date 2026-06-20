@@ -174,18 +174,21 @@ StyledRect {
                         model: row.displayTags
 
                         StyledRect {
+                            id: chip
                             required property string modelData
+                            readonly property var tc: row.notmuch ? row.notmuch.tagColors : ({})
+                            readonly property bool hasColor: tc[modelData] !== undefined
                             radius: Theme.cornerRadius / 2
-                            color: Theme.surfaceContainerHigh
+                            color: hasColor ? Theme.withAlpha(tc[modelData], 0.16) : Theme.surfaceContainerHigh
                             implicitWidth: chipText.implicitWidth + Theme.spacingS
                             implicitHeight: chipText.implicitHeight + 2
 
                             StyledText {
                                 id: chipText
                                 anchors.centerIn: parent
-                                text: parent.modelData
+                                text: chip.modelData
                                 font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.surfaceTextMedium
+                                color: chip.hasColor ? chip.tc[chip.modelData] : Theme.surfaceTextMedium
                             }
                         }
                     }

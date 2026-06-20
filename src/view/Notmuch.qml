@@ -26,6 +26,8 @@ QtObject {
     property var definitions: []
     property var counts: ({})
     readonly property var savedSearches: Model.savedSearches(definitions, counts)
+    // Map tag → couleur (config), pour colorer les chips.
+    readonly property var tagColors: Model.tagColors(definitions)
 
     onDefinitionsChanged: refreshCounts()
 
