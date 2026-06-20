@@ -61,6 +61,40 @@ PluginComponent {
                 color: root.unreadCount > 0 ? Theme.primary : Theme.surfaceTextMedium
             }
 
+            // Anneau qui pulse tant qu'il y a des non-lus (désactivé si animations = None).
+            Rectangle {
+                id: pulseRing
+                anchors.centerIn: badge
+                width: badge.width
+                height: badge.height
+                radius: height / 2
+                color: Theme.error
+                z: -1
+                visible: root.unreadCount > 0 && Theme.currentAnimationSpeed !== SettingsData.AnimationSpeed.None
+
+                ParallelAnimation {
+                    running: pulseRing.visible
+                    loops: Animation.Infinite
+
+                    NumberAnimation {
+                        target: pulseRing
+                        property: "scale"
+                        from: 1
+                        to: 2.4
+                        duration: 1600
+                        easing.type: Easing.OutQuad
+                    }
+                    NumberAnimation {
+                        target: pulseRing
+                        property: "opacity"
+                        from: 0.5
+                        to: 0
+                        duration: 1600
+                        easing.type: Easing.OutQuad
+                    }
+                }
+            }
+
             // Badge de non-lus, ancré en haut-droite de l'icône.
             StyledRect {
                 id: badge

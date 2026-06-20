@@ -23,6 +23,30 @@ StyledRect {
     radius: Theme.cornerRadius
     color: row.ListView.isCurrentItem ? Theme.primarySelected : (rowHover.hovered ? Theme.surfaceContainerHigh : "transparent")
 
+    // Apparition en fondu échelonné (désactivée si animations = None).
+    opacity: 0
+    Component.onCompleted: {
+        if (Theme.currentAnimationSpeed === SettingsData.AnimationSpeed.None) {
+            opacity = 1;
+            return;
+        }
+        appear.start();
+    }
+    SequentialAnimation {
+        id: appear
+        PauseAnimation {
+            duration: Math.min(row.index, 10) * 25
+        }
+        NumberAnimation {
+            target: row
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: Theme.shortDuration
+            easing.type: Easing.OutQuad
+        }
+    }
+
     HoverHandler {
         id: rowHover
     }
