@@ -81,9 +81,9 @@ DankMaterialShell.
    qui pourrait diverger de la base.
 2. **Tag-only.** Aucune notion de dossier. Les actions sont des mutations de tags :
    lu = `-unread`, archiver = `-inbox`, flag = `+flagged`, spam = `+spam`, etc.
-3. **Les smart folders sont des tags.** `Inbox`, `Job`, `Achats`, `Humanité`,
-   `Mailing lists`, `EGIT`, `Flaggés`, `Spam` = des requêtes `tag:…` avec compteur,
-   pas des entités stockées.
+3. **Les smart folders sont des tags.** Les vues universelles (`Inbox`, `Flaggés`,
+   `Spam`…) et les **catégories définies en config utilisateur** = des requêtes `tag:…`
+   avec compteur, pas des entités stockées. astropath n'embarque aucune taxonomie en dur.
 4. **Agnostique au compte.** astropath ne modélise pas les comptes : un compte n'est
    qu'une facette de requête notmuch (chemin ou tag). Mono ou multi-compte se modélisent
    via les recherches sauvegardées, sans traitement spécial — conséquence directe du
@@ -130,16 +130,19 @@ aplat massif.
 
 Chip = `background: rgba(couleur, 0.16)` + `color: couleur`.
 
+Tags universels (couleur fixe) :
+
 | Tag | notmuch | Couleur |
 |---|---|---|
 | inbox | `tag:inbox` | `#89b4fa` |
-| job | `tag:job` | `#b4befe` |
-| achats | `tag:achats` | `#a6e3a1` |
-| humanité | `tag:humanite` | `#94e2d5` |
-| ml | `tag:ml` | `#fab387` |
-| EGIT | `tag:EGIT` | `#f9e2af` |
-| Flaggés | `tag:flagged` | `#fab387` |
-| Spam | `tag:spam` | `#f38ba8` |
+| flaggé | `tag:flagged` | `#fab387` |
+| spam | `tag:spam` | `#f38ba8` |
+
+Les **tags de catégorie** (les smart folders perso de l'utilisateur) reçoivent chacun
+une couleur de la palette Catppuccin, assignée en **config utilisateur** — astropath ne
+code aucune taxonomie en dur (cf. invariant *agnostique au compte*). Palette disponible
+pour l'assignation : Lavender `#b4befe`, Green `#a6e3a1`, Teal `#94e2d5`, Peach `#fab387`,
+Yellow `#f9e2af`, Mauve `#cba6f7`.
 
 ### Formes & profondeur
 
