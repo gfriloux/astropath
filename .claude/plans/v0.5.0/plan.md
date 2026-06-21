@@ -130,7 +130,7 @@ survol ; rien ne casse si `enableRippleEffects`/animations off).
 - [x] Aucune valeur hex en dur (tout via `Theme.*`).
 - [x] Chaque animation neutralisée sur `AnimationSpeed.None` (Behaviors gardés ; ripple/tooltip via StateLayer).
 - [x] Doc (`DESIGN.md`) synchronisée dans le même commit que le code (Phase 2).
-- [x] Commits atomiques sur `feat/visual-polish`, signés `+code`.
+- [x] Commits atomiques sur `feat/visual-polish` (email `guillaume@friloux.me`, signés GPG).
 - [ ] Branche mergée sur `main` à la clôture (par l'utilisateur).
 
 ## Bilan
