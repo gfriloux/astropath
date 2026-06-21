@@ -138,7 +138,7 @@ StyledRect {
                         width: parent.width - meta.width - Theme.spacingM
                         text: row.thread.authors
                         font.pixelSize: Theme.fontSizeMedium
-                        font.weight: row.thread.unread ? Font.DemiBold : Font.Normal
+                        font.weight: row.thread.unread ? Font.DemiBold : Font.Medium
                         color: row.thread.unread ? Theme.surfaceText : Theme.surfaceTextMedium
                         elide: Text.ElideRight
                     }
@@ -181,7 +181,7 @@ StyledRect {
                     visible: row.active && row.snippet.length > 0
                     text: row.snippet
                     font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.surfaceTextMedium
+                    color: Theme.withAlpha(Theme.surfaceText, 0.5)
                     wrapMode: Text.WordWrap
                     maximumLineCount: 2
                     elide: Text.ElideRight
