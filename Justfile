@@ -47,8 +47,10 @@ run:
     echo "Plugin lié → $dir/Astropath"
     echo "Active 'Astropath' dans DMS (Settings → Plugins). Après chaque modif : just reload."
 
-# Recharge DMS (relit les plugins depuis le disque — le toggle ne suffit pas, QML est caché).
+# Recharge DMS : purge le bytecode QML compilé (sinon l'ancien rendu persiste) puis
+# redémarre le service. Le toggle plugin seul ne suffit pas.
 reload:
+    rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/quickshell/qmlcache"
     systemctl --user restart dms.service
 
 # Régénère CHANGELOG.md depuis les Conventional Commits (git-cliff).
