@@ -126,16 +126,18 @@ survol ; rien ne casse si `enableRippleEffects`/animations off).
 ## Portes de qualité (clôture)
 
 - [x] `just ci` passe (fmt + lint + test, 20 passed) — aucun golden ne bouge (étage `view`).
-- [ ] Rendu validé dans DMS (`manual_tests.md`) — **à faire par l'utilisateur** (`just run`).
+- [x] Rendu validé dans DMS (relecture visuelle utilisateur, 2026-06-21).
 - [x] Aucune valeur hex en dur (tout via `Theme.*`).
 - [x] Chaque animation neutralisée sur `AnimationSpeed.None` (Behaviors gardés ; ripple/tooltip via StateLayer).
-- [x] Doc (`DESIGN.md`) synchronisée dans le même commit que le code (Phase 2).
+- [x] Doc (`DESIGN.md`) synchronisée dans le même commit que le code.
 - [x] Commits atomiques sur `feat/visual-polish` (email `guillaume@friloux.me`, signés GPG).
 - [ ] Branche mergée sur `main` à la clôture (par l'utilisateur).
 
 ## Bilan
 
-Les 6 phases sont implémentées, `just ci` vert. Commits :
+**Statut : validé visuellement, prêt à merger (2026-06-21).** `just ci` vert.
+
+Commits du plan (étage `view`) :
 
 1. `feat(view): hiérarchiser émetteur/sujet/snippet dans ThreadRow`
 2. `feat(view): séparateurs en dégradé entre les fils` (+ `GradientSeparator.qml`, DESIGN.md)
@@ -143,8 +145,24 @@ Les 6 phases sont implémentées, `just ci` vert. Commits :
 4. `feat(view): révélation animée de la barre d'actions`
 5. `feat(view): ripple et infobulles sur les boutons d'action` (ActionButton sur StateLayer)
 
-**Écart corrigé en passant :** le bord-gauche mauve du fil actif (prescrit DESIGN.md) était
-absent du code — ajouté en Phase 3.
+### Ajustements post-relecture visuelle
 
-**Reste à faire :** relecture visuelle dans DMS (`just run`, cf. `manual_tests.md`),
-animations ON puis OFF ; puis merge `feat/visual-polish` → `main` par l'utilisateur.
+- **Hiérarchie renforcée** (`feat(view): renforcer la hiérarchie…`) : la version initiale
+  était trop discrète à l'usage → émetteur DemiBold plein, sujet Normal éteint (0.55),
+  snippet plus pâle (0.42).
+- **Bord mauve retiré** (`feat(view): retirer le bord mauve…`) : jugé non concluant
+  visuellement ; la sélection repose désormais sur la **carte tintée seule**. DESIGN.md
+  mis à jour (l'écart « bord-gauche Mauve » de la Phase 3 est donc annulé, pas conservé).
+- **Popup agrandi** (`feat(view): agrandir le popup… (680x680)`) : 582×520 trop à l'étroit.
+  DESIGN.md note de largeur passée à ~680px.
+
+### Hors périmètre `view`, traités en passant
+
+- **`build:` purge du qmlcache dans `just reload`** : un `systemctl restart` seul
+  reservait l'ancien bytecode QML compilé → modifs invisibles. Cause de la confusion de
+  relecture initiale (cf. [[dms-plugin-reload-qmlcache]]).
+- **Email des commits corrigé** : la branche a été réécrite en `guillaume@friloux.me`
+  (auteur + committer, re-signés GPG) ; `guillaume+code@friloux.me` cassait la vérif
+  (cf. [[commit-email-gpg]]).
+
+**Reste à faire :** merge `feat/visual-polish` → `main` + push + tag `v0.5.0` (utilisateur).
