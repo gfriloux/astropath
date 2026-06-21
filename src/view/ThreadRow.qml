@@ -86,28 +86,6 @@ StyledRect {
         }
     }
 
-    // Bord-gauche d'accent mauve sur le fil actif (cf. DESIGN.md). Glisse en largeur
-    // à la sélection (neutralisé si animations = None).
-    Rectangle {
-        id: accent
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.topMargin: Theme.spacingXS
-        anchors.bottomMargin: Theme.spacingXS
-        width: row.active ? 3 : 0
-        radius: width / 2
-        color: Theme.primary
-
-        Behavior on width {
-            enabled: Theme.currentAnimationSpeed !== SettingsData.AnimationSpeed.None
-            NumberAnimation {
-                duration: Theme.shortDuration
-                easing.type: Theme.standardEasing
-            }
-        }
-    }
-
     Column {
         id: layout
         anchors.left: parent.left

@@ -185,7 +185,7 @@ Layout de référence (le prototype HTML détaille le pixel-perfect) :
 - **Rail gauche (~172px)** : liste verticale des recherches sauvegardées (icône + label +
   compteur), sélection marquée par un bord-gauche Mauve.
 - **Zone principale** : barre de recherche + liste de fils en densité moyenne (avatar 32px).
-  Le fil sous le curseur clavier a un bord-gauche Mauve, un fond tinté, et révèle la
+  Le fil sous le curseur clavier a un **fond tinté** (mauve translucide) et révèle la
   **rangée d'actions inline** (lu / archiver / flag / retag / supprimer / ouvrir).
 - **Pied** : chips de raccourcis clavier (`j`/`k`, `⏎`, `e`, `#`).
 
