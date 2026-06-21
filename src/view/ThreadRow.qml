@@ -169,7 +169,7 @@ StyledRect {
                         width: parent.width - meta.width - Theme.spacingM
                         text: row.thread.authors
                         font.pixelSize: Theme.fontSizeMedium
-                        font.weight: row.thread.unread ? Font.DemiBold : Font.Medium
+                        font.weight: Font.DemiBold
                         color: row.thread.unread ? Theme.surfaceText : Theme.surfaceTextMedium
                         elide: Text.ElideRight
                     }
@@ -202,7 +202,8 @@ StyledRect {
                     width: parent.width
                     text: row.thread.subject
                     font.pixelSize: Theme.fontSizeMedium
-                    color: row.thread.unread ? Theme.surfaceText : Theme.surfaceTextMedium
+                    font.weight: Font.Normal
+                    color: row.thread.unread ? Theme.surfaceTextMedium : Theme.withAlpha(Theme.surfaceText, 0.55)
                     elide: Text.ElideRight
                 }
 
@@ -212,7 +213,7 @@ StyledRect {
                     visible: row.active && row.snippet.length > 0
                     text: row.snippet
                     font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.withAlpha(Theme.surfaceText, 0.5)
+                    color: Theme.withAlpha(Theme.surfaceText, 0.42)
                     wrapMode: Text.WordWrap
                     maximumLineCount: 2
                     elide: Text.ElideRight
