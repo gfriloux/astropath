@@ -259,8 +259,27 @@ StyledRect {
         Item {
             id: actionBar
             width: parent.width
-            visible: rowHover.hovered || row.active
-            implicitHeight: visible ? abCol.implicitHeight : 0
+            clip: true
+
+            readonly property bool shown: rowHover.hovered || row.active
+            visible: implicitHeight > 0
+            implicitHeight: shown ? abCol.implicitHeight : 0
+            opacity: shown ? 1 : 0
+
+            Behavior on implicitHeight {
+                enabled: Theme.currentAnimationSpeed !== SettingsData.AnimationSpeed.None
+                NumberAnimation {
+                    duration: Theme.shortDuration
+                    easing.type: Theme.standardEasing
+                }
+            }
+            Behavior on opacity {
+                enabled: Theme.currentAnimationSpeed !== SettingsData.AnimationSpeed.None
+                NumberAnimation {
+                    duration: Theme.shortDuration
+                    easing.type: Theme.standardEasing
+                }
+            }
 
             Column {
                 id: abCol
