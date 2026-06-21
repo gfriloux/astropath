@@ -37,6 +37,15 @@ StyledRect {
     radius: Theme.cornerRadius
     color: active ? Theme.primarySelected : (rowHover.hovered ? Theme.surfaceContainerHigh : "transparent")
 
+    // Transition douce du fond entre repos / survol / sélection (neutralisée si None).
+    Behavior on color {
+        enabled: Theme.currentAnimationSpeed !== SettingsData.AnimationSpeed.None
+        ColorAnimation {
+            duration: Theme.shortDuration
+            easing.type: Theme.standardEasing
+        }
+    }
+
     // Apparition en fondu échelonné (désactivée si animations = None).
     opacity: 0
     Component.onCompleted: {
@@ -73,6 +82,28 @@ StyledRect {
             if (v) {
                 v.currentIndex = row.index;
                 v.forceActiveFocus();
+            }
+        }
+    }
+
+    // Bord-gauche d'accent mauve sur le fil actif (cf. DESIGN.md). Glisse en largeur
+    // à la sélection (neutralisé si animations = None).
+    Rectangle {
+        id: accent
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.topMargin: Theme.spacingXS
+        anchors.bottomMargin: Theme.spacingXS
+        width: row.active ? 3 : 0
+        radius: width / 2
+        color: Theme.primary
+
+        Behavior on width {
+            enabled: Theme.currentAnimationSpeed !== SettingsData.AnimationSpeed.None
+            NumberAnimation {
+                duration: Theme.shortDuration
+                easing.type: Theme.standardEasing
             }
         }
     }
