@@ -295,35 +295,41 @@ StyledRect {
                         visible: row.thread.unread
                         icon: "mark_email_read"
                         hoverColor: Theme.success
+                        tooltip: "Marquer lu"
                         onTriggered: if (row.notmuch)
                             row.notmuch.markRead(row.thread.id)
                     }
                     ActionButton {
                         icon: "archive"
                         hoverColor: Theme.info
+                        tooltip: "Archiver"
                         onTriggered: if (row.notmuch)
                             row.notmuch.archive(row.thread.id)
                     }
                     ActionButton {
                         icon: "flag"
                         hoverColor: Theme.warning
+                        tooltip: row.thread.flagged ? "Retirer le flag" : "Flag"
                         onTriggered: if (row.notmuch)
                             row.notmuch.toggleFlag(row.thread.id, row.thread.flagged)
                     }
                     ActionButton {
                         icon: "sell"
                         hoverColor: Theme.primary
+                        tooltip: "Retag"
                         onTriggered: row.retagging = !row.retagging
                     }
                     ActionButton {
                         icon: "delete"
                         hoverColor: Theme.error
+                        tooltip: "Supprimer"
                         onTriggered: if (row.notmuch)
                             row.notmuch.trash(row.thread.id)
                     }
                     ActionButton {
                         icon: "open_in_new"
                         hoverColor: Theme.primary
+                        tooltip: "Ouvrir"
                         onTriggered: if (row.notmuch)
                             row.notmuch.open(row.thread.id)
                     }
