@@ -124,6 +124,6 @@ PluginComponent {
             viewHeight: root.popoutHeight
         }
     }
-    popoutWidth: 582
-    popoutHeight: 520
+    popoutWidth: 680
+    popoutHeight: 680
 }

@@ -178,8 +178,9 @@ Yellow `#f9e2af`, Mauve `#cba6f7`.
 La direction retenue est **C — cockpit** : un mini-client dense, orienté power-user clavier.
 Layout de référence (le prototype HTML détaille le pixel-perfect) :
 
-- **Largeur ~582px** — au-delà de la cible 380–420px des autres directions, assumé : le
-  cockpit privilégie la densité d'information à la compacité.
+- **Largeur ~680px** (popup ~680×680) — bien au-delà de la cible 380–420px des autres
+  directions, assumé : le cockpit privilégie la densité d'information et la lisibilité à
+  la compacité.
 - **En-tête télémétrie** pleine largeur : wordmark, état `SYNC LIVE` + barres de signal
   animées, refresh, bouton **Composer**.
 - **Rail gauche (~172px)** : liste verticale des recherches sauvegardées (icône + label +
