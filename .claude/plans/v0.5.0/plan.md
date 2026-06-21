@@ -1,8 +1,8 @@
 # Plan : v0.5.0 — polish visuel du cockpit
 
 **Type :** vue (étage `view` uniquement)
-**Statut :** En attente de validation
-**Branche prévue :** `feat/visual-polish`
+**Statut :** Implémenté — en attente de relecture visuelle + merge (2026-06-21)
+**Branche :** `feat/visual-polish`
 
 ## Contexte
 
@@ -125,14 +125,26 @@ survol ; rien ne casse si `enableRippleEffects`/animations off).
 
 ## Portes de qualité (clôture)
 
-- [ ] `just ci` passe (fmt + lint + test) — aucun golden ne bouge (étage `view`).
-- [ ] Rendu validé dans DMS (`manual_tests.md`).
-- [ ] Aucune valeur hex en dur (tout via `Theme.*`).
-- [ ] Chaque animation neutralisée sur `AnimationSpeed.None`.
-- [ ] Doc (`DESIGN.md`) synchronisée dans le même commit que le code.
-- [ ] Commits atomiques sur `feat/visual-polish`, signés `+code`.
+- [x] `just ci` passe (fmt + lint + test, 20 passed) — aucun golden ne bouge (étage `view`).
+- [ ] Rendu validé dans DMS (`manual_tests.md`) — **à faire par l'utilisateur** (`just run`).
+- [x] Aucune valeur hex en dur (tout via `Theme.*`).
+- [x] Chaque animation neutralisée sur `AnimationSpeed.None` (Behaviors gardés ; ripple/tooltip via StateLayer).
+- [x] Doc (`DESIGN.md`) synchronisée dans le même commit que le code (Phase 2).
+- [x] Commits atomiques sur `feat/visual-polish`, signés `+code`.
 - [ ] Branche mergée sur `main` à la clôture (par l'utilisateur).
 
 ## Bilan
 
-_(à compléter à la clôture)_
+Les 6 phases sont implémentées, `just ci` vert. Commits :
+
+1. `feat(view): hiérarchiser émetteur/sujet/snippet dans ThreadRow`
+2. `feat(view): séparateurs en dégradé entre les fils` (+ `GradientSeparator.qml`, DESIGN.md)
+3. `feat(view): bord d'accent mauve et transitions hover/sélection`
+4. `feat(view): révélation animée de la barre d'actions`
+5. `feat(view): ripple et infobulles sur les boutons d'action` (ActionButton sur StateLayer)
+
+**Écart corrigé en passant :** le bord-gauche mauve du fil actif (prescrit DESIGN.md) était
+absent du code — ajouté en Phase 3.
+
+**Reste à faire :** relecture visuelle dans DMS (`just run`, cf. `manual_tests.md`),
+animations ON puis OFF ; puis merge `feat/visual-polish` → `main` par l'utilisateur.
