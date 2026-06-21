@@ -167,6 +167,9 @@ Yellow `#f9e2af`, Mauve `#cba6f7`.
 - Rayon principal **12px** (cartes, popup) ; 6–10px pour chips/petits boutons ; 14px barre.
 - Profondeur par **empilement de surfaces**, pas d'ombres dures. Seule ombre :
   `0 16px 48px rgba(0,0,0,.5)` sous le popup. Blur de fond : `blur(18px)`.
+- **Séparateurs de liste** : filet 1px en **dégradé** (fondu aux deux bords), teinte
+  `outline`. Posé entre les fils ; s'efface (en fondu) autour de la carte active/survolée
+  pour ne jamais la trancher.
 - Typo : **Inter** (UI), **JetBrains Mono** (requêtes/heures/compteurs),
   **Material Symbols Rounded** (icônes, fill 0).
 

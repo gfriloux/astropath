@@ -301,4 +301,25 @@ StyledRect {
             }
         }
     }
+
+    // Filet séparateur en pied de rangée, fondu aux bords. Masqué (en fondu) autour de
+    // la carte active/survolée et sous le dernier fil, pour ne jamais trancher une carte.
+    GradientSeparator {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: Theme.spacingM
+        anchors.rightMargin: Theme.spacingM
+
+        readonly property bool last: row.ListView.view ? row.index === row.ListView.view.count - 1 : false
+        opacity: (row.active || rowHover.hovered || last) ? 0 : 1
+
+        Behavior on opacity {
+            enabled: Theme.currentAnimationSpeed !== SettingsData.AnimationSpeed.None
+            NumberAnimation {
+                duration: Theme.shortDuration
+                easing.type: Theme.standardEasing
+            }
+        }
+    }
 }
