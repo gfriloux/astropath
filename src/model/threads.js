@@ -56,6 +56,70 @@ function tagColors(definitions) {
     return m;
 }
 
+// Tags machine/opérationnels : des ÉTATS, pas des catégories. Exclus de l'auto-découverte
+// du rail (les universels inbox/flagged/spam y figurent car déjà épinglés avec leur couleur
+// fixe). Ce n'est pas une taxonomie perso codée en dur (cf. DESIGN, inv. 3) : juste la liste
+// des tags que notmuch/la synchro posent pour signaler un état. L'utilisateur peut masquer
+// d'autres tags ou ré-afficher ceux-ci via les overrides.
+var DEFAULT_TAG_BLOCKLIST = ["unread", "inbox", "flagged", "spam", "attachment", "signed", "encrypted", "replied", "sent", "draft", "passed", "new", "deleted"];
+
+// Palette catégories Catppuccin (DESIGN : teintes proposées pour l'assignation, hors
+// couleurs fixes des universels). Couleur stable d'un tag = hash déterministe sur la palette.
+var CATEGORY_PALETTE = ["#b4befe", "#a6e3a1", "#94e2d5", "#fab387", "#f9e2af", "#cba6f7"];
+
+function colorForTag(tag) {
+    var s = String(tag || "");
+    var h = 0;
+    for (var i = 0; i < s.length; i++)
+        h = (h + s.charCodeAt(i)) % CATEGORY_PALETTE.length;
+    return CATEGORY_PALETTE[h];
+}
+
+// Assemble la liste de définitions du rail à partir des tags découverts et de la config.
+// Pur ⇒ goldenable. cfg = {
+//   universals : définitions épinglées en tête (couleur fixe), telles quelles ;
+//   blocklist  : tags exclus de l'auto (défaut : DEFAULT_TAG_BLOCKLIST) ;
+//   overrides  : [{tag, label?, color?, hidden?}] — amende un tag découvert ;
+//   custom     : [{key,label,query,color}] — recherches composées, ajoutées en fin.
+// }
+// Sortie : universels ⊕ découverts(triés, hors blocklist & hors masqués) ⊕ custom.
+function buildDefinitions(tags, cfg) {
+    cfg = cfg || {};
+    var universals = cfg.universals || [];
+    var blockset = {};
+    (cfg.blocklist || DEFAULT_TAG_BLOCKLIST).forEach(function (t) {
+        blockset[t] = true;
+    });
+    var overrides = {};
+    (cfg.overrides || []).forEach(function (o) {
+        if (o && o.tag)
+            overrides[o.tag] = o;
+    });
+
+    var discovered = (tags || []).filter(function (t) {
+        return !blockset[t] && !(overrides[t] && overrides[t].hidden);
+    }).sort().map(function (t) {
+        var o = overrides[t] || {};
+        return {
+            key: t,
+            label: o.label || t,
+            query: "tag:" + t,
+            color: o.color || colorForTag(t)
+        };
+    });
+
+    var custom = (cfg.custom || []).map(function (c) {
+        return {
+            key: c.key,
+            label: c.label,
+            query: c.query,
+            color: c.color
+        };
+    });
+
+    return universals.concat(discovered).concat(custom);
+}
+
 // Enrichit des smart folders de leur compteur. Les définitions (label/requête/couleur)
 // sont de la CONFIG utilisateur, injectées — jamais codées en dur ici (le modèle reste
 // générique et agnostique à la taxonomie perso). definitions = [{key,label,query,color}],

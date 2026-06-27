@@ -100,8 +100,14 @@ installé dans `~/.config/DankMaterialShell/plugins/Astropath/`. Il hérite du t
 2. **Tag-only.** Aucune notion de dossier. Les actions sont des mutations de tags :
    lu = `-unread`, archiver = `-inbox`, flag = `+flagged`, spam = `+spam`, etc.
 3. **Les smart folders sont des tags.** Les vues universelles (`Inbox`, `Flaggés`,
-   `Spam`…) et les **catégories définies en config utilisateur** = des requêtes `tag:…`
-   avec compteur, pas des entités stockées. astropath n'embarque aucune taxonomie en dur.
+   `Spam`…) et les **catégories** = des requêtes `tag:…` avec compteur, pas des entités
+   stockées. astropath n'embarque aucune taxonomie en dur : les catégories sont
+   **auto-découvertes** depuis les tags de la base (`notmuch search --output=tags`,
+   conséquence directe de *notmuch fait foi*). Sont exclus de l'auto les **tags machine**
+   (états : `unread`, `attachment`, `signed`, `replied`… — une liste de tags
+   *opérationnels*, pas une taxonomie perso). La config utilisateur n'**amende** que :
+   masquer un tag, renommer son libellé, changer sa couleur, ou ajouter une recherche
+   **composée** (que l'auto, limitée au `tag:X` simple, ne peut pas générer).
 4. **Agnostique au compte.** astropath ne modélise pas les comptes : un compte n'est
    qu'une facette de requête notmuch (chemin ou tag). Mono ou multi-compte se modélisent
    via les recherches sauvegardées, sans traitement spécial — conséquence directe du
@@ -156,10 +162,11 @@ Tags universels (couleur fixe) :
 | flaggé | `tag:flagged` | `#fab387` |
 | spam | `tag:spam` | `#f38ba8` |
 
-Les **tags de catégorie** (les smart folders perso de l'utilisateur) reçoivent chacun
-une couleur de la palette Catppuccin, assignée en **config utilisateur** — astropath ne
-code aucune taxonomie en dur (cf. invariant *agnostique au compte*). Palette disponible
-pour l'assignation : Lavender `#b4befe`, Green `#a6e3a1`, Teal `#94e2d5`, Peach `#fab387`,
+Les **tags de catégorie** (auto-découverts) reçoivent chacun une couleur **dérivée par
+hash déterministe** du nom du tag sur la palette catégories — même tag → même couleur,
+sans config (et goldenable). L'utilisateur peut **surcharger** la couleur d'un tag donné.
+astropath ne code aucune taxonomie en dur (cf. invariant *agnostique au compte*). Palette
+catégories : Lavender `#b4befe`, Green `#a6e3a1`, Teal `#94e2d5`, Peach `#fab387`,
 Yellow `#f9e2af`, Mauve `#cba6f7`.
 
 ### Formes & profondeur

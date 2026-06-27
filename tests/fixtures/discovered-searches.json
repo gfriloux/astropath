@@ -1,0 +1,18 @@
+{
+  "tags": ["unread", "inbox", "boulot", "perso", "attachment", "newsletters", "flagged", "spam", "signed"],
+  "cfg": {
+    "universals": [
+      { "key": "inbox", "label": "Inbox", "query": "tag:inbox", "color": "#89b4fa" },
+      { "key": "flagged", "label": "Flaggés", "query": "tag:flagged", "color": "#fab387" },
+      { "key": "spam", "label": "Spam", "query": "tag:spam", "color": "#f38ba8" }
+    ],
+    "blocklist": ["unread", "inbox", "attachment", "flagged", "spam", "signed"],
+    "overrides": [
+      { "tag": "newsletters", "hidden": true },
+      { "tag": "boulot", "label": "Boulot", "color": "#cba6f7" }
+    ],
+    "custom": [
+      { "key": "urgent", "label": "Urgent", "query": "tag:boulot and tag:unread", "color": "#f38ba8" }
+    ]
+  }
+}

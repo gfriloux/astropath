@@ -1,0 +1,38 @@
+[
+  {
+    "key": "inbox",
+    "label": "Inbox",
+    "query": "tag:inbox",
+    "color": "#89b4fa"
+  },
+  {
+    "key": "flagged",
+    "label": "Flaggés",
+    "query": "tag:flagged",
+    "color": "#fab387"
+  },
+  {
+    "key": "spam",
+    "label": "Spam",
+    "query": "tag:spam",
+    "color": "#f38ba8"
+  },
+  {
+    "key": "boulot",
+    "label": "Boulot",
+    "query": "tag:boulot",
+    "color": "#cba6f7"
+  },
+  {
+    "key": "perso",
+    "label": "perso",
+    "query": "tag:perso",
+    "color": "#a6e3a1"
+  },
+  {
+    "key": "urgent",
+    "label": "Urgent",
+    "query": "tag:boulot and tag:unread",
+    "color": "#f38ba8"
+  }
+]

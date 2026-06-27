@@ -13,5 +13,13 @@ var cases = [
             return Model.savedSearches(input.definitions, input.counts);
         }
     },
-    { name: "show-thread", transform: Model.parseShow }
+    { name: "show-thread", transform: Model.parseShow },
+    {
+        name: "discovered-searches",
+        // La fixture porte tags + cfg (universels/blocklist/overrides/custom) ; on adapte
+        // vers la signature de buildDefinitions.
+        transform: function (input) {
+            return Model.buildDefinitions(input.tags, input.cfg);
+        }
+    }
 ];

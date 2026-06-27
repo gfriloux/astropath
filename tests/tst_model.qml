@@ -20,6 +20,20 @@ TestCase {
         compare(Model.parseTags("   \n  \n").length, 0);
     }
 
+    function test_colorForTag() {
+        // Déterministe et dans la palette catégories.
+        compare(Model.colorForTag("boulot"), Model.colorForTag("boulot"));
+        verify(Model.CATEGORY_PALETTE.indexOf(Model.colorForTag("perso")) !== -1);
+    }
+
+    function test_buildDefinitions_defaultBlocklist() {
+        // Sans cfg.blocklist → DEFAULT_TAG_BLOCKLIST s'applique (unread/inbox exclus).
+        var defs = Model.buildDefinitions(["unread", "inbox", "boulot"], {});
+        compare(defs.length, 1);
+        compare(defs[0].key, "boulot");
+        compare(defs[0].query, "tag:boulot");
+    }
+
     function test_relativeTime() {
         var now = 1000000000000;
         compare(Format.relativeTime(0, now), "");
