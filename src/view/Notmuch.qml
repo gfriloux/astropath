@@ -21,15 +21,38 @@ QtObject {
     property string status: "idle" // idle | querying | error
     property double lastSyncAt: 0
 
-    // Définitions des smart folders : injectées depuis la config (settings du plugin).
-    // Le widget fournit un défaut universel si la config est vide.
-    property var definitions: []
+    // Catégories du rail = auto-découvertes depuis les tags de la base, amendées par la
+    // config (cf. DESIGN inv. 3). Le widget injecte les universels épinglés + les overrides
+    // et recherches custom lus des réglages.
+    property var universals: []
+    property var tagOverrides: []
+    property var customSearches: []
+    property var discoveredTags: []
+
+    readonly property var definitions: Model.buildDefinitions(discoveredTags, {
+        "universals": universals,
+        "overrides": tagOverrides,
+        "custom": customSearches
+    })
     property var counts: ({})
     readonly property var savedSearches: Model.savedSearches(definitions, counts)
-    // Map tag → couleur (config), pour colorer les chips.
+    // Map tag → couleur (définitions assemblées), pour colorer les chips.
     readonly property var tagColors: Model.tagColors(definitions)
 
     onDefinitionsChanged: refreshCounts()
+
+    // Découverte des tags : notmuch search --output=tags '*' → discoveredTags, qui
+    // recompose definitions (donc refreshCounts via onDefinitionsChanged).
+    function discoverTags() {
+        tagsProc.running = true;
+    }
+    property Process tagsProc: Process {
+        command: ["notmuch"].concat(Queries.tags())
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: root.discoveredTags = Model.parseTags(text)
+        }
+    }
 
     // Commande du client de lecture (config) — pour ouvrir un fil.
     property string readerCommand: ""
@@ -45,6 +68,7 @@ QtObject {
     function refresh() {
         runSearch();
         unreadProc.running = true;
+        discoverTags();
         refreshCounts();
     }
 

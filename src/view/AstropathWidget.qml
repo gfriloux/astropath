@@ -12,37 +12,40 @@ PluginComponent {
     // Compteur de fils non-lus, alimenté par le service Notmuch (polling).
     readonly property int unreadCount: notmuchSvc.unreadCount
 
-    // Défaut universel des smart folders (aucune taxonomie perso ; l'utilisateur ajoute
-    // ses catégories via les réglages → pluginData.savedSearches).
-    readonly property var defaultDefinitions: [
+    // Universels épinglés en tête du rail (couleurs fixes DESIGN). Le reste des catégories
+    // est auto-découvert depuis les tags de la base ; la config ne fait qu'amender.
+    readonly property var universals: [
         {
             "key": "inbox",
             "label": "Inbox",
             "query": "tag:inbox",
-            "color": ""
+            "color": "#89b4fa"
         },
         {
             "key": "flagged",
             "label": "Flaggés",
             "query": "tag:flagged",
-            "color": ""
+            "color": "#fab387"
         },
         {
             "key": "spam",
             "label": "Spam",
             "query": "tag:spam",
-            "color": ""
+            "color": "#f38ba8"
         }
     ]
 
-    // Config lue depuis les réglages du plugin (pluginData), avec repli sur les défauts.
-    readonly property var cfgDefinitions: (pluginData && pluginData.savedSearches && pluginData.savedSearches.length > 0) ? pluginData.savedSearches : defaultDefinitions
+    // Amendements lus des réglages (pluginData) : overrides par tag + recherches composées.
+    readonly property var cfgOverrides: (pluginData && pluginData.tagOverrides) ? pluginData.tagOverrides : []
+    readonly property var cfgCustom: (pluginData && pluginData.customSearches) ? pluginData.customSearches : []
     readonly property int cfgIntervalMs: (pluginData && pluginData.pollSeconds > 0) ? pluginData.pollSeconds * 1000 : 20000
     readonly property string cfgReader: (pluginData && pluginData.readerCommand) ? pluginData.readerCommand : ""
 
     Notmuch {
         id: notmuchSvc
-        definitions: root.cfgDefinitions
+        universals: root.universals
+        tagOverrides: root.cfgOverrides
+        customSearches: root.cfgCustom
         intervalMs: root.cfgIntervalMs
         readerCommand: root.cfgReader
     }
