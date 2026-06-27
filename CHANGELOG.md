@@ -3,6 +3,46 @@
 All notable changes to astropath are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-06-27
+
+### Documentation
+
+- **plan**: cadrer v0.6.0 (catégories auto-découvertes, opt-out) ([`8d26b42`](https://github.com/gfriloux/astropath/commit/8d26b4292fad3a564eda1f3a6cf224fc591592c8))
+
+### Features
+
+- **query**: découverte des tags notmuch ([`3ec6d85`](https://github.com/gfriloux/astropath/commit/3ec6d85bdb0829906b95dbd341a2fb17653cd7e2))
+- **model**: catégories auto-dérivées des tags ([`3ca1127`](https://github.com/gfriloux/astropath/commit/3ca11278395300302af27c5ff11b389d7eb577e4))
+- **view**: peupler le rail depuis les tags ([`a5b66ae`](https://github.com/gfriloux/astropath/commit/a5b66aeec42c74d02119d3c56dc96163b137df5e))
+- **view**: réglages d'amendement des catégories ([`eb0bc64`](https://github.com/gfriloux/astropath/commit/eb0bc640b56e40f093e971629ba4ed4bc8dfe29a))
+## [0.6.0] — 2026-06-27
+
+### Documentation
+
+- aligner la sélection du rail sur l'impl (fond tinté, pas de bord) ([`5fc5972`](https://github.com/gfriloux/astropath/commit/5fc597218c99c1a9ca04bb8f81fd447b2129591d))
+
+### Features
+
+- **dev**: instance DMS isolée pour tester le worktree ([`dae0401`](https://github.com/gfriloux/astropath/commit/dae0401243c9a6f797ef975e9b5704371aece405))
+## [0.5.0] — 2026-06-21
+
+### Documentation
+
+- plan v0.5.0 (polish visuel du cockpit) ([`8c22320`](https://github.com/gfriloux/astropath/commit/8c2232017c6926c9f7543c510daccfa7530cb345))
+- bilan v0.5.0 (polish visuel implémenté, ci verte) ([`c8af1b6`](https://github.com/gfriloux/astropath/commit/c8af1b6afbc5f5aa290354c645ffcc8e39ed8c9a))
+- corriger la convention d'email des commits (guillaume@friloux.me) ([`8c6847f`](https://github.com/gfriloux/astropath/commit/8c6847f0d1a6d36a94449f4980177b82b79f7c30))
+- clôturer le bilan v0.5.0 (validé visuellement, ajustements post-relecture) ([`e7ae417`](https://github.com/gfriloux/astropath/commit/e7ae4179f1539eabfd21d9cc7ff33d01dde8c1b0))
+
+### Features
+
+- **view**: hiérarchiser émetteur/sujet/snippet dans ThreadRow ([`38aa868`](https://github.com/gfriloux/astropath/commit/38aa8684367e9c8aaf3b3e8e92baaeb4f5deb4c6))
+- **view**: séparateurs en dégradé entre les fils ([`8c90e00`](https://github.com/gfriloux/astropath/commit/8c90e0095b3334082149f017d7e809c2af58171c))
+- **view**: bord d'accent mauve et transitions hover/sélection ([`a13a1d3`](https://github.com/gfriloux/astropath/commit/a13a1d310debf4af3cf4e48d762d798225623b43))
+- **view**: révélation animée de la barre d'actions ([`24a4403`](https://github.com/gfriloux/astropath/commit/24a4403a740f9561e7cb724e2b302e2d42aeec89))
+- **view**: ripple et infobulles sur les boutons d'action ([`128556a`](https://github.com/gfriloux/astropath/commit/128556a15c236ccb67c62e05dd1f4e17e7dbaf7a))
+- **view**: renforcer la hiérarchie émetteur/sujet/snippet ([`1cf59fa`](https://github.com/gfriloux/astropath/commit/1cf59fa844b9620d75f693c0a89e29c1f4abdc3f))
+- **view**: retirer le bord mauve du fil actif ([`c925499`](https://github.com/gfriloux/astropath/commit/c9254993bc9d649a3e439843977f0302e7d0f9a4))
+- **view**: agrandir le popup cockpit (680x680) pour la lisibilité ([`9a83036`](https://github.com/gfriloux/astropath/commit/9a83036e3568bac071a5ac7b21c6747a88ed648a))
 ## [0.4.0] — 2026-06-20
 
 ### Bug Fixes
@@ -30,6 +70,7 @@ Releases follow [Semantic Versioning](https://semver.org/).
 - **plan**: drop VIP from v0.4.0 scope ([`7998ef4`](https://github.com/gfriloux/astropath/commit/7998ef4be0f6f9f50dec8cc9b02ac5bd65053327))
 - **plan**: close v0.4.0 ([`331a79e`](https://github.com/gfriloux/astropath/commit/331a79e120315d3f53460e71957f605967197d30))
 - **plan**: add release tooling plan ([`3f6a1ea`](https://github.com/gfriloux/astropath/commit/3f6a1eaa5c25a0ba1ffe51aaf44a02c14afe6997))
+- document release tooling and close release plan ([`2af534c`](https://github.com/gfriloux/astropath/commit/2af534cc74fc6952bc87728cb9a01610b04cee5a))
 
 ### Features
 
