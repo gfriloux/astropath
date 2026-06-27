@@ -1,4 +1,4 @@
-# Tests manuels — v0.6.0 (catégories auto-découvertes)
+# Tests manuels — v0.7.0 (catégories auto-découvertes)
 
 À exécuter en clôture (ce que les goldens ne couvrent pas : rendu QML, réglages live).
 

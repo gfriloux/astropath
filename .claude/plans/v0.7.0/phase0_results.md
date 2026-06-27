@@ -1,4 +1,4 @@
-# Phase 0 — Audit (v0.6.0)
+# Phase 0 — Audit (v0.7.0)
 
 Commande : `nix develop --command just ci`
 Date : 2026-06-27

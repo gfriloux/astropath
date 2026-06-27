@@ -2,7 +2,7 @@
   "id": "astropath",
   "name": "Astropath",
   "description": "Visu rapide des mails notmuch — triage par fil et par tag",
-  "version": "0.2.0",
+  "version": "0.7.0",
   "author": "gfriloux",
   "type": "widget",
   "capabilities": ["dankbar-widget"],

@@ -50,7 +50,7 @@ L'ancienne clé `savedSearches` est abandonnée (aucun utilisateur publié).
 - [ ] `src/view/SavedSearchEditor.qml` — mode amender
 - [ ] `src/view/Settings.qml` — clés réglages
 - [ ] `DESIGN.md` — inv. 3 + mapping couleur (auto-dérivé, blocklist = états)
-- [ ] `.claude/plans/v0.6.0/manual_tests.md`
+- [ ] `.claude/plans/v0.7.0/manual_tests.md`
 
 ### Étapes atomiques
 
