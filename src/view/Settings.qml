@@ -1,6 +1,7 @@
 // Réglages du plugin (PluginsTab de DMS). Déclaratif : chaque *Setting auto-persiste dans
 // pluginData via son settingKey. Le widget lit pluginData (readerCommand, pollSeconds,
-// savedSearches). La taxonomie perso vit ICI (config locale), jamais dans le repo.
+// tagOverrides, customSearches). La taxonomie est auto-découverte depuis notmuch ; la
+// config ne porte que les AMENDEMENTS (masquer/renommer/recolorer + recherches composées).
 import QtQuick
 import qs.Common
 import qs.Widgets
@@ -37,7 +38,5 @@ PluginSettings {
         leftIcon: "schedule"
     }
 
-    SavedSearchEditor {
-        settingKey: "savedSearches"
-    }
+    CategorySettings {}
 }
