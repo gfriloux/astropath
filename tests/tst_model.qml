@@ -13,6 +13,13 @@ TestCase {
         compare(Model.parseCount("  42 "), 42);
     }
 
+    function test_parseTags() {
+        var t = Model.parseTags("boulot\nperso\n\n  newsletters  \n");
+        compare(JSON.stringify(t), JSON.stringify(["boulot", "perso", "newsletters"]));
+        compare(Model.parseTags("").length, 0);
+        compare(Model.parseTags("   \n  \n").length, 0);
+    }
+
     function test_relativeTime() {
         var now = 1000000000000;
         compare(Format.relativeTime(0, now), "");

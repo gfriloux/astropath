@@ -27,6 +27,10 @@ TestCase {
         eq(Q.showThread("abc123"), ["show", "--format=json", "thread:abc123"]);
     }
 
+    function test_tags() {
+        eq(Q.tags(), ["search", "--output=tags", "*"]);
+    }
+
     function test_tagThread_add() {
         eq(Q.tagThread("abc", { add: ["flagged"] }),
            ["tag", "+flagged", "--", "thread:abc"]);

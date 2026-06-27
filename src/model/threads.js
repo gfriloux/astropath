@@ -31,6 +31,16 @@ function parseCount(output) {
     return parseInt(String(output).trim(), 10) || 0;
 }
 
+// notmuch search --output=tags → liste de tags (sortie texte, 1 tag par ligne).
+// On nettoie : trim de chaque ligne, lignes vides retirées. Ordre notmuch préservé.
+function parseTags(output) {
+    return String(output || "").split("\n").map(function (l) {
+        return l.trim();
+    }).filter(function (l) {
+        return l.length > 0;
+    });
+}
+
 // Map tag → couleur, dérivée des définitions de smart folders (requêtes simples « tag:X »).
 // Les requêtes composées (espaces) ou sans couleur sont ignorées.
 function tagColors(definitions) {

@@ -16,6 +16,13 @@ function searchUnread() {
     return search(UNREAD_QUERY);
 }
 
+// notmuch search --output=tags '*' → liste de tous les tags de la base (texte, 1/ligne).
+// Sert à découvrir la taxonomie (les catégories du rail en dérivent). Pas de --format=json :
+// la sortie tags est déjà une liste de lignes brutes.
+function tags() {
+    return ["search", "--output=tags", "*"];
+}
+
 // notmuch count 'query' → entier. output optionnel : "messages" (défaut notmuch) ou "threads".
 function count(query, output) {
     var args = ["count"];
