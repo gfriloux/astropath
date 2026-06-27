@@ -47,6 +47,11 @@ run:
     echo "Plugin lié → $dir/Astropath"
     echo "Active 'Astropath' dans DMS (Settings → Plugins). Après chaque modif : just reload."
 
+# Lance une instance DMS *isolée* (config/cache dédiés) chargeant le worktree comme
+# plugin « Astropath (dev) ». Teste la version en cours sans toucher au DMS quotidien.
+dev-bar:
+    @scripts/astropath-dev "{{justfile_directory()}}"
+
 # Recharge DMS : purge le bytecode QML compilé (sinon l'ancien rendu persiste) puis
 # redémarre le service. Le toggle plugin seul ne suffit pas.
 reload:

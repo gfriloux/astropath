@@ -24,8 +24,21 @@
       # Module home-manager : installe astropath comme plugin DankMaterialShell.
       flake.homeModules.default = import ./nix/hm-module.nix;
 
-      perSystem = {pkgs, ...}: {
+      perSystem = {pkgs, ...}: let
+        # Launcher d'instance DMS isolée pour tester le worktree (cf. scripts/astropath-dev).
+        astropath-dev = pkgs.writeShellApplication {
+          name = "astropath-dev";
+          runtimeInputs = [pkgs.jq];
+          text = builtins.readFile ./scripts/astropath-dev;
+        };
+      in {
         formatter = pkgs.alejandra;
+
+        packages.dev-bar = astropath-dev;
+        apps.dev-bar = {
+          type = "app";
+          program = "${astropath-dev}/bin/astropath-dev";
+        };
 
         devShells.default = pkgs.mkShell {
           name = "astropath";
@@ -42,6 +55,7 @@
             just
             git
             git-cliff
+            jq # scripts/astropath-dev (instance dev isolée)
 
             # Portes Nix (cf. .pre-commit-config.yaml)
             alejandra
