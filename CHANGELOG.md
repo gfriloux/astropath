@@ -3,11 +3,17 @@
 All notable changes to astropath are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.7.1] — 2026-07-19
+
+### Bug Fixes
+
+- **view**: rendre le rail des catégories défilable ([`875e0bf`](https://github.com/gfriloux/astropath/commit/875e0bf5b901cf199d2582397ce51df91f9fd3c2))
 ## [0.7.0] — 2026-06-27
 
 ### Documentation
 
 - **plan**: cadrer v0.6.0 (catégories auto-découvertes, opt-out) ([`8d26b42`](https://github.com/gfriloux/astropath/commit/8d26b4292fad3a564eda1f3a6cf224fc591592c8))
+- changelog v0.7.0 ([`4aa8e40`](https://github.com/gfriloux/astropath/commit/4aa8e40fca97c256aa17c62fe427306dbcb9384e))
 
 ### Features
 
