@@ -1,5 +1,5 @@
-// Filet séparateur fin (1px) en dégradé horizontal, fondu aux deux bords. Posé entre les
-// fils de la liste cockpit. Couleur dérivée du thème DMS (pas de hex en dur).
+// Thin (1px) separator hairline with a horizontal gradient, fading out at both ends. Placed
+// between threads in the cockpit list. Color derived from the DMS theme (no hardcoded hex).
 import QtQuick
 import qs.Common
 

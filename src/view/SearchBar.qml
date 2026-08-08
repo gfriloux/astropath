@@ -1,5 +1,5 @@
-// Barre de recherche : saisie d'une requête notmuch brute → met à jour la liste (debounce).
-// Vide → revient aux non-lus. Indépendante du rail (taper outrepasse la sélection).
+// Search bar: typing a raw notmuch query updates the list (debounced).
+// Empty → back to the unread query. Independent from the rail (typing overrides the selection).
 import QtQuick
 import qs.Common
 import qs.Widgets

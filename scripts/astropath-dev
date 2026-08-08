@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# astropath-dev — lance une instance DankMaterialShell *isolée* qui ne charge QUE le
-# plugin astropath du worktree courant. Sert à tester la version en cours de dev sans
-# toucher au DMS quotidien (géré, lui, par le module home-manager).
+# astropath-dev — starts an *isolated* DankMaterialShell instance that loads ONLY the
+# astropath plugin from the current worktree. Meant to test the in-progress version
+# without touching the daily DMS (which the home-manager module manages).
 #
-# Isolation : XDG_CONFIG_HOME + XDG_CACHE_HOME dédiés → settings, dossier de plugins et
-# qmlcache séparés de l'instance quotidienne. Le plugin pointe en symlink (live) sur le
-# src/ du worktree : on édite, on relance, c'est visible (cache isolé → pas de purge).
+# Isolation: dedicated XDG_CONFIG_HOME + XDG_CACHE_HOME → settings, plugin folder and
+# qmlcache separate from the daily instance. The plugin symlinks (live) to the worktree's
+# src/: edit, restart, and it shows up (isolated cache → no purge needed).
 #
-# L'id du manifeste reste "astropath" : il doit rester aligné avec `pluginId` dans
-# src/view/Settings.qml (sinon les réglages sont écrits/lus sous des clés différentes).
-# Seul le libellé affiché passe à "Astropath (dev)" pour distinguer les deux barres.
+# The manifest id stays "astropath": it must stay aligned with `pluginId` in
+# src/view/Settings.qml (otherwise settings are written/read under different keys).
+# Only the displayed name becomes "Astropath (dev)", to tell the two bars apart.
 set -euo pipefail
 
-# Racine du dépôt (contient plugin.json + src/). Défaut : répertoire courant.
+# Repository root (holds plugin.json + src/). Defaults to the current directory.
 if [ "$#" -gt 0 ]; then
     src="$1"
     shift
@@ -22,11 +22,11 @@ fi
 src="$(cd "$src" && pwd)"
 
 if [ ! -f "$src/plugin.json" ] || [ ! -d "$src/src" ]; then
-    echo "astropath-dev : '$src' ne contient pas plugin.json + src/ (pointe la racine du dépôt)." >&2
+    echo "astropath-dev: '$src' has no plugin.json + src/ (point it at the repository root)." >&2
     exit 1
 fi
-command -v dms >/dev/null || { echo "astropath-dev : 'dms' introuvable sur le PATH." >&2; exit 1; }
-command -v jq  >/dev/null || { echo "astropath-dev : 'jq' introuvable sur le PATH." >&2; exit 1; }
+command -v dms >/dev/null || { echo "astropath-dev: 'dms' not found in PATH." >&2; exit 1; }
+command -v jq  >/dev/null || { echo "astropath-dev: 'jq' not found in PATH." >&2; exit 1; }
 
 root="${XDG_STATE_HOME:-$HOME/.local/state}/astropath-dev"
 export XDG_CONFIG_HOME="$root/config"
@@ -36,19 +36,19 @@ export XDG_STATE_HOME="$root/state"
 plugindir="$XDG_CONFIG_HOME/DankMaterialShell/plugins/Astropath"
 mkdir -p "$plugindir"
 
-# plugin.json dérivé du worktree : seul le libellé change, l'id reste "astropath".
+# plugin.json derived from the worktree: only the name changes, the id stays "astropath".
 jq '.name = "Astropath (dev)"' "$src/plugin.json" >"$plugindir/plugin.json"
-# src live : symlink hors-store vers le worktree.
+# live src: out-of-store symlink to the worktree.
 ln -sfn "$src/src" "$plugindir/src"
 
-echo "astropath-dev : instance DMS isolée"
-echo "  source : $src/src (live)"
-echo "  config : $XDG_CONFIG_HOME"
-echo "  cache  : $XDG_CACHE_HOME"
-echo "  → active 'Astropath (dev)' dans CETTE instance (Settings → Plugins)."
-echo "  → au 1er lancement la barre peut chevaucher la barre du haut : déplace-la une"
-echo "    fois (autre écran/bord) dans les réglages de l'instance dev, ça persiste."
-echo "  (Ctrl-C pour arrêter l'instance dev.)"
+echo "astropath-dev: isolated DMS instance"
+echo "  source: $src/src (live)"
+echo "  config: $XDG_CONFIG_HOME"
+echo "  cache : $XDG_CACHE_HOME"
+echo "  → enable 'Astropath (dev)' in THIS instance (Settings → Plugins)."
+echo "  → on first launch the bar may overlap the top bar: move it once"
+echo "    (other screen/edge) in the dev instance's settings, it persists."
+echo "  (Ctrl-C to stop the dev instance.)"
 
-# `dms run` = `qs -c dms` : sans la sous-commande `run`, dms n'affiche que son usage.
+# `dms run` = `qs -c dms`: without the `run` subcommand, dms only prints its usage.
 exec dms run "$@"

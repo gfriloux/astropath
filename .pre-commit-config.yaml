@@ -1,6 +1,6 @@
 ---
-# Hooks locaux. Appellent les mêmes gates que `just ci` et la CI — une seule
-# définition (le Justfile), trois déclencheurs. Installer avec `pre-commit install`.
+# Local hooks. They call the same gates as `just ci` and CI — one single definition
+# (the Justfile), three triggers. Install with `pre-commit install`.
 repos:
   - repo: local
     hooks:

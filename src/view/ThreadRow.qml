@@ -1,6 +1,6 @@
-// Une ligne de fil dans la liste cockpit. Délégué de DankListView : `modelData` = un objet
-// Thread (parseSearch). Avatar monogramme, distinction lu/non-lu, chips de tags (catégories),
-// flag, heure/compteur en mono, surlignage clavier, barre d'actions révélée EN DESSOUS.
+// One thread row in the cockpit list. DankListView delegate: `modelData` = a Thread object
+// (parseSearch). Monogram avatar, read/unread distinction, tag chips (categories), flag,
+// time/counter in mono, keyboard highlight, action bar revealed BELOW.
 import QtQuick
 import qs.Common
 import qs.Widgets
@@ -14,11 +14,11 @@ StyledRect {
     readonly property var thread: modelData
     property var notmuch: null
 
-    // Tags d'état masqués (déjà indiqués autrement) : on n'affiche que les catégories.
+    // State tags hidden (already conveyed otherwise): only categories are displayed.
     readonly property var noiseTags: ["unread", "inbox", "flagged", "attachment", "replied", "sent", "draft", "signed", "encrypted", "new"]
     readonly property var displayTags: (thread.tags || []).filter(t => row.noiseTags.indexOf(t) === -1)
 
-    // Palette d'avatar dérivée du thème DMS (pas de hex en dur) ; teinte par expéditeur.
+    // Avatar palette derived from the DMS theme (no hardcoded hex); hue per sender.
     readonly property var avatarPalette: [Theme.primary, Theme.info, Theme.success, Theme.warning, Theme.error, Theme.secondary]
     readonly property color avatarColor: avatarPalette[Format.colorIndex(thread.authors, avatarPalette.length)]
 
@@ -26,7 +26,7 @@ StyledRect {
     readonly property string snippet: (notmuch && notmuch.snippets[thread.id]) ? notmuch.snippets[thread.id] : ""
     property bool retagging: false
 
-    // Récupère le snippet (notmuch show paresseux) quand le fil devient courant.
+    // Fetches the snippet (lazy notmuch show) when the thread becomes the current one.
     onActiveChanged: if (active && notmuch)
         notmuch.fetchSnippet(thread.id)
     onRetaggingChanged: if (retagging)
@@ -37,7 +37,7 @@ StyledRect {
     radius: Theme.cornerRadius
     color: active ? Theme.primarySelected : (rowHover.hovered ? Theme.surfaceContainerHigh : "transparent")
 
-    // Transition douce du fond entre repos / survol / sélection (neutralisée si None).
+    // Smooth background transition between rest / hover / selection (neutralized when None).
     Behavior on color {
         enabled: Theme.currentAnimationSpeed !== SettingsData.AnimationSpeed.None
         ColorAnimation {
@@ -46,7 +46,7 @@ StyledRect {
         }
     }
 
-    // Apparition en fondu échelonné (désactivée si animations = None).
+    // Staggered fade-in (disabled when animations = None).
     opacity: 0
     Component.onCompleted: {
         if (Theme.currentAnimationSpeed === SettingsData.AnimationSpeed.None) {
@@ -94,7 +94,7 @@ StyledRect {
         anchors.margins: Theme.spacingM
         spacing: Theme.spacingS
 
-        // Contenu : avatar + texte.
+        // Content: avatar + text.
         Row {
             id: body
             width: parent.width
@@ -185,7 +185,7 @@ StyledRect {
                     elide: Text.ElideRight
                 }
 
-                // Snippet (notmuch show), affiché sur l'élément courant.
+                // Snippet (notmuch show), shown on the current item.
                 StyledText {
                     width: parent.width
                     visible: row.active && row.snippet.length > 0
@@ -233,8 +233,8 @@ StyledRect {
             }
         }
 
-        // Barre d'actions révélée EN DESSOUS au survol / sur l'élément courant (invisible →
-        // exclue du Column, la ligne reste compacte).
+        // Action bar revealed BELOW on hover / on the current item (invisible →
+        // excluded from the Column, so the row stays compact).
         Item {
             id: actionBar
             width: parent.width
@@ -314,7 +314,7 @@ StyledRect {
                     }
                 }
 
-                // Éditeur de retag inline : « +tag -tag » puis Entrée.
+                // Inline retag editor: « +tag -tag » then Enter.
                 DankTextField {
                     id: retagField
                     visible: row.retagging
@@ -337,8 +337,8 @@ StyledRect {
         }
     }
 
-    // Filet séparateur en pied de rangée, fondu aux bords. Masqué (en fondu) autour de
-    // la carte active/survolée et sous le dernier fil, pour ne jamais trancher une carte.
+    // Separator hairline at the row's foot, fading at both ends. Faded out around the
+    // active/hovered card and under the last thread, so it never cuts through a card.
     GradientSeparator {
         anchors.left: parent.left
         anchors.right: parent.right

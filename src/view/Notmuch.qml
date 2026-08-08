@@ -1,5 +1,5 @@
-// Service Notmuch : lance notmuch via Process, parse avec la couche données (threads.js),
-// expose le modèle + un statut. Polling périodique (pas de notmuch new : on lit seulement).
+// Notmuch service: runs notmuch through Process, parses with the data layer (threads.js),
+// exposes the model + a status. Periodic polling (no notmuch new: we only read).
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -11,19 +11,19 @@ QtObject {
 
     property int intervalMs: 20000
 
-    // Requête affichée dans la liste (par défaut : les non-lus de la boîte).
+    // Query shown in the list (by default: the inbox's unread threads).
     property string currentQuery: Queries.UNREAD_QUERY
     property var threads: []
 
-    // Compteur du badge : toujours les non-lus, indépendant de la requête courante.
+    // Badge counter: always the unread ones, independent of the current query.
     property int unreadCount: 0
 
     property string status: "idle" // idle | querying | error
     property double lastSyncAt: 0
 
-    // Catégories du rail = auto-découvertes depuis les tags de la base, amendées par la
-    // config (cf. DESIGN inv. 3). Le widget injecte les universels épinglés + les overrides
-    // et recherches custom lus des réglages.
+    // Rail categories = auto-discovered from the database's tags, amended by the config
+    // (see DESIGN inv. 3). The widget injects the pinned universals + the overrides and
+    // custom searches read from the settings.
     property var universals: []
     property var tagOverrides: []
     property var customSearches: []
@@ -36,13 +36,13 @@ QtObject {
     })
     property var counts: ({})
     readonly property var savedSearches: Model.savedSearches(definitions, counts)
-    // Map tag → couleur (définitions assemblées), pour colorer les chips.
+    // Map tag → color (assembled definitions), to color the chips.
     readonly property var tagColors: Model.tagColors(definitions)
 
     onDefinitionsChanged: refreshCounts()
 
-    // Découverte des tags : notmuch search --output=tags '*' → discoveredTags, qui
-    // recompose definitions (donc refreshCounts via onDefinitionsChanged).
+    // Tag discovery: notmuch search --output=tags '*' → discoveredTags, which rebuilds
+    // definitions (hence refreshCounts through onDefinitionsChanged).
     function discoverTags() {
         tagsProc.running = true;
     }
@@ -54,11 +54,11 @@ QtObject {
         }
     }
 
-    // Commande du client de lecture (config) — pour ouvrir un fil.
+    // Reading client command (config) — used to open a thread.
     property string readerCommand: ""
 
-    // Pose le command impérativement (pas de binding lazy) puis lance : garantit que la
-    // requête lancée est bien la requête courante, même juste après un changement.
+    // Sets command imperatively (no lazy binding) then starts: guarantees the query that
+    // runs is the current one, even right after a change.
     function runSearch() {
         root.status = "querying";
         searchProc.command = ["notmuch"].concat(Queries.search(root.currentQuery));
@@ -72,8 +72,8 @@ QtObject {
         refreshCounts();
     }
 
-    // Compteurs des smart folders : une seule séquence à la fois (non-réentrant). Si on
-    // redemande pendant un calcul, on relance après, avec les définitions à jour.
+    // Smart folder counters: one sequence at a time (non-reentrant). If asked again while
+    // one is running, we restart afterwards, with the up-to-date definitions.
     property bool _counting: false
     property bool _countPending: false
     property var _countCb: null
@@ -86,7 +86,7 @@ QtObject {
         _startCounts();
     }
     function _startCounts() {
-        var defs = (definitions || []).slice(); // snapshot cohérent
+        var defs = (definitions || []).slice(); // consistent snapshot
         if (defs.length === 0) {
             root.counts = {};
             root._counting = false;
@@ -128,12 +128,12 @@ QtObject {
         runSearch();
     }
 
-    // Recherche libre : texte vide → revient aux non-lus par défaut.
+    // Free-text search: empty text → back to the default unread query.
     function searchText(t) {
         setQuery(t && t.length > 0 ? t : Queries.UNREAD_QUERY);
     }
 
-    // Mutations de tags (tag-only). Après succès → refresh de la liste.
+    // Tag mutations (tag-only). On success → refresh the list.
     function tag(threadId, ops) {
         tagProc.command = ["notmuch"].concat(Queries.tagThread(threadId, ops));
         tagProc.running = true;
@@ -162,16 +162,16 @@ QtObject {
         });
     }
 
-    // Ouvre un fil dans le client de lecture configuré (la requête thread:<id> est ajoutée).
+    // Opens a thread in the configured reading client (the thread:<id> query is appended).
     function open(id) {
         if (root.readerCommand && root.readerCommand.length > 0)
             Quickshell.execDetached(["sh", "-c", root.readerCommand + " thread:" + id]);
         else
-            console.warn("astropath: commande de lecture non configurée (réglages)");
+            console.warn("astropath: no reader command configured (settings)");
     }
 
-    // Snippets paresseux : récupérés via notmuch show pour l'élément courant uniquement
-    // (1 process à la fois, mis en cache par id de fil).
+    // Lazy snippets: fetched through notmuch show for the current item only
+    // (one process at a time, cached by thread id).
     property var snippets: ({})
     property string _snippetId: ""
     function fetchSnippet(id) {
@@ -191,13 +191,13 @@ QtObject {
                     m[root._snippetId] = detail.snippet;
                     root.snippets = m;
                 } catch (e) {
-                    console.warn("astropath: parse show échoué:", e);
+                    console.warn("astropath: show parse failed:", e);
                 }
             }
         }
     }
 
-    // Liste : search de la requête courante.
+    // List: search for the current query.
     property Process searchProc: Process {
         running: false
 
@@ -209,7 +209,7 @@ QtObject {
                     root.lastSyncAt = Date.now();
                 } catch (e) {
                     root.status = "error";
-                    console.warn("astropath: parse search échoué:", e);
+                    console.warn("astropath: search parse failed:", e);
                 }
             }
         }
@@ -229,7 +229,7 @@ QtObject {
         }
     }
 
-    // Mutation de tags : notmuch tag … -- thread:id.
+    // Tag mutation: notmuch tag … -- thread:id.
     property Process tagProc: Process {
         running: false
 
@@ -246,7 +246,7 @@ QtObject {
         }
     }
 
-    // Compteur badge : count des non-lus.
+    // Badge counter: count of unread threads.
     property Process unreadProc: Process {
         command: ["notmuch"].concat(Queries.count(Queries.UNREAD_QUERY))
         running: false
@@ -256,7 +256,7 @@ QtObject {
         }
     }
 
-    // Polling : re-query périodiquement (récupère ce que la machinerie externe a indexé).
+    // Polling: re-query periodically (picks up whatever the external machinery indexed).
     property Timer poll: Timer {
         interval: root.intervalMs
         running: true

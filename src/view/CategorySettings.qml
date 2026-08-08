@@ -1,7 +1,7 @@
-// Réglages des catégories (PluginSettings de DMS) : AMENDE l'auto-découverte, ne crée plus.
-// Les catégories du rail dérivent des tags notmuch (cf. DESIGN inv. 3). Ici on liste les
-// tags de la base (hors tags d'état) avec masquer/renommer/recolorer → persiste dans
-// pluginData.tagOverrides ; et les recherches COMPOSÉES (multi-tags) → pluginData.customSearches.
+// Category settings (DMS's PluginSettings): AMENDS auto-discovery, it no longer creates.
+// The rail's categories derive from notmuch tags (see DESIGN inv. 3). Here we list the
+// database's tags (state tags excluded) with hide/rename/recolor → persisted into
+// pluginData.tagOverrides; and the COMPOSED searches (multi-tag) → pluginData.customSearches.
 import QtQuick
 import Quickshell.Io
 import qs.Common
@@ -12,7 +12,7 @@ import "../model/threads.js" as Model
 Column {
     id: editor
 
-    // Palette Catppuccin Mocha (accents) proposée pour les pastilles.
+    // Catppuccin Mocha palette (accents) offered for the color dots.
     readonly property var palette: ["#cba6f7", "#b4befe", "#89b4fa", "#94e2d5", "#a6e3a1", "#f9e2af", "#fab387", "#f38ba8"]
     property var discoveredTags: []
     property var overrides: [] // [{tag, label?, color?, hidden?}]
@@ -48,8 +48,8 @@ Column {
                 return overrides[i];
         return null;
     }
-    // Fusionne un amendement sur un tag. On nettoie les champs vides ; une entrée réduite
-    // à { tag } (plus aucun amendement) est retirée pour ne pas polluer la config.
+    // Merges an amendment onto a tag. Empty fields are cleaned up; an entry reduced to
+    // { tag } (no amendment left) is dropped so it does not clutter the config.
     function patchOverride(tag, patch) {
         let a = overrides.slice();
         let idx = -1;
@@ -67,7 +67,7 @@ Column {
             delete merged.color;
         if (!merged.hidden)
             delete merged.hidden;
-        let bare = Object.keys(merged).length === 1; // ne reste que { tag }
+        let bare = Object.keys(merged).length === 1; // only { tag } is left
         if (idx >= 0)
             bare ? a.splice(idx, 1) : a[idx] = merged;
         else if (!bare)
@@ -103,7 +103,7 @@ Column {
         }
     }
 
-    // --- Catégories auto-découvertes -----------------------------------------
+    // --- Auto-discovered categories ------------------------------------------
     StyledText {
         text: "Catégories"
         font.pixelSize: Theme.fontSizeMedium
@@ -206,7 +206,7 @@ Column {
         }
     }
 
-    // --- Recherches composées ------------------------------------------------
+    // --- Composed searches ----------------------------------------------------
     StyledText {
         text: "Recherches composées"
         font.pixelSize: Theme.fontSizeMedium

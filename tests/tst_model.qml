@@ -21,13 +21,13 @@ TestCase {
     }
 
     function test_colorForTag() {
-        // Déterministe et dans la palette catégories.
+        // Deterministic, and within the category palette.
         compare(Model.colorForTag("boulot"), Model.colorForTag("boulot"));
         verify(Model.CATEGORY_PALETTE.indexOf(Model.colorForTag("perso")) !== -1);
     }
 
     function test_buildDefinitions_defaultBlocklist() {
-        // Sans cfg.blocklist → DEFAULT_TAG_BLOCKLIST s'applique (unread/inbox exclus).
+        // Without cfg.blocklist → DEFAULT_TAG_BLOCKLIST applies (unread/inbox excluded).
         var defs = Model.buildDefinitions(["unread", "inbox", "boulot"], {});
         compare(defs.length, 1);
         compare(defs[0].key, "boulot");
@@ -62,8 +62,8 @@ TestCase {
                 "color": ""
             }]);
         compare(m["alpha"], "#b4befe");
-        verify(m["x"] === undefined); // requête composée ignorée
-        verify(m["spam"] === undefined); // sans couleur ignorée
+        verify(m["x"] === undefined); // composed query ignored
+        verify(m["spam"] === undefined); // colorless one ignored
     }
 
     function test_parseRetag() {
@@ -76,7 +76,7 @@ TestCase {
     }
 
     function test_colorIndex() {
-        // Déterministe et borné.
+        // Deterministic and bounded.
         compare(Format.colorIndex("alice", 6), Format.colorIndex("alice", 6));
         verify(Format.colorIndex("bob", 6) >= 0 && Format.colorIndex("bob", 6) < 6);
         compare(Format.colorIndex("x", 0), 0);

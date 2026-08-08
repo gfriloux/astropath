@@ -1,4 +1,4 @@
-// Indice de raccourci clavier : une touche (keycap) + son action, pour le pied du cockpit.
+// Keyboard shortcut hint: a keycap + its action, for the cockpit footer.
 import QtQuick
 import qs.Common
 import qs.Widgets
