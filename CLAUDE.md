@@ -1,67 +1,73 @@
 # CLAUDE.md
 
-Guidage pour Claude Code (claude.ai/code) dans ce dépôt.
+Guidance for Claude Code (claude.ai/code) in this repository.
 
-> **Avant tout travail sur le code, lire [`DESIGN.md`](./DESIGN.md) puis
-> [`PROCEDURE_PLANS.md`](./PROCEDURE_PLANS.md). On ne code pas sans plan validé.**
+> **Before any work on the code, read [`DESIGN.md`](./DESIGN.md) then
+> [`PROCEDURE_PLANS.md`](./PROCEDURE_PLANS.md). No code without an approved plan.**
 
-## Ce qu'est astropath
+## What astropath is
 
-Widget mail pour **Quickshell / DankMaterialShell** : badge de non-lus dans la barre +
-popup. Données via **notmuch** (Maildir indexé), raisonnement **par fil et par tag**
-(agnostique au compte). Synchro **offlineimap** + **imapnotify**. L'ouverture d'un fil
-délègue à un client externe configurable (`alot` actuellement). Détails et invariants :
+A mail widget for **Quickshell / DankMaterialShell**: an unread badge in the bar +
+a popup. Data via **notmuch** (indexed Maildir), reasoning **by thread and by tag**
+(account-agnostic). Syncing by **offlineimap** + **imapnotify**. Opening a thread
+delegates to a configurable external client (`alot` today). Details and invariants:
 `DESIGN.md`.
 
-## Pile & structure
+## Stack & structure
 
-- **Vue** : QML / Qt Quick (Quickshell), Material 3, Catppuccin Mocha.
-- **Données** : couche `query` (lance notmuch) → `model` (modèle de fils, pur/testable) →
-  `view` (QML). Le QML n'appelle **jamais** `notmuch` en direct.
+- **View**: QML / Qt Quick (Quickshell), Material 3, Catppuccin Mocha.
+- **Data**: `query` layer (runs notmuch) → `model` (thread model, pure/testable) →
+  `view` (QML). The QML **never** calls `notmuch` directly.
 
 ```
-src/            ← QML Quickshell + couches query/model
-tests/          ← fixtures notmuch (JSON figé) + goldens (modèle attendu)
-.claude/plans/  ← plans de version (plan.md, manual_tests.md, phase0_results.md)
-tmp/            ← scratch non commité (handoff design, notes)
+src/            ← Quickshell QML + query/model layers
+tests/          ← notmuch fixtures (frozen JSON) + goldens (expected model)
+.claude/plans/  ← version plans (plan.md, manual_tests.md, phase0_results.md)
+tmp/            ← uncommitted scratch (design handoff, notes)
 ```
+
+## Language
+
+Docs, code comments and commit messages are in **English**. The **UI copy stays in
+French** (labels in `src/view/`, settings descriptions). Do not translate user-facing
+strings as a side effect of another change.
 
 ## Dev environment
 
-Toujours entrer le dev shell Nix avant de builder/tester :
+Always enter the Nix dev shell before building/testing:
 
 ```bash
 nix develop
 ```
 
-Pour les commandes non interactives : `nix develop --command just ci`.
+For non-interactive commands: `nix develop --command just ci`.
 
-## Commandes
+## Commands
 
 ```bash
-just ci          # porte complète : fmt-check + lint + test
-just fmt         # qmlformat -i (formate en place)
-just fmt-check   # vérifie le format, échoue si non conforme
-just lint        # qmllint, aucun warning toléré
-just test        # golden notmuch + Qt Quick Test
-just run         # lance le widget dans Quickshell (essai manuel)
-just bless       # régénère les goldens (relire le diff)
+just ci          # full gate: fmt-check + lint + test
+just fmt         # qmlformat -i (formats in place)
+just fmt-check   # checks formatting, fails if non-conforming
+just lint        # qmllint, no warning tolerated
+just test        # notmuch goldens + Qt Quick Test
+just run         # runs the widget in Quickshell (manual testing)
+just bless       # regenerates the goldens (review the diff)
 ```
 
-Le `Justfile` est la **seule** définition des gates ; pre-commit et la CI l'appellent.
+The `Justfile` is the **only** definition of the gates; pre-commit and CI call it.
 
-## Garde-fous (ce qui ne change pas)
+## Guardrails (what does not change)
 
-- **DESIGN.md fait foi.** Hors invariants → non. Tag-only, notmuch source de vérité,
-  **agnostique au compte** (un compte = une facette de requête, donc multi-compte par
-  construction) : invariants durs. Le client de lecture (`alot` aujourd'hui) est une
-  décision de périmètre **révisable**, pas un invariant.
-- **Git : hybride.** Claude travaille sur une **branche dédiée**, commite **atomiquement**
-  (Conventional Commits, cf. PROCEDURE_PLANS.md §3), et ne fait **jamais** `merge`/`push`/`tag`.
-  L'utilisateur relit, merge sur `main`, push.
-- **Doc dans le même commit** que le code qu'elle décrit.
-- **`tmp/`** : jamais commité.
-- **Couche données déterministe** : tout changement de `query`/`model` passe par une
-  fixture + un golden (cf. PROCEDURE_PLANS.md §4).
-- **Outillage release** (renovate, git-cliff, workflow release) : ajouté au **premier tag**,
-  pas avant.
+- **DESIGN.md is authoritative.** Outside the invariants → no. Tag-only, notmuch as
+  source of truth, **account-agnostic** (an account is just a query facet, so
+  multi-account comes for free): hard invariants. The reading client (`alot` today) is a
+  **revisable** scope decision, not an invariant.
+- **Git: hybrid.** Claude works on a **dedicated branch**, commits **atomically**
+  (Conventional Commits, see PROCEDURE_PLANS.md §3), and **never** runs `merge`/`push`/`tag`.
+  The user reviews, merges into `main`, pushes.
+- **Docs in the same commit** as the code they describe.
+- **`tmp/`**: never committed.
+- **Deterministic data layer**: any change to `query`/`model` goes through a fixture +
+  a golden (see PROCEDURE_PLANS.md §4).
+- **Release tooling** (renovate, git-cliff, release workflow): added at the **first tag**,
+  not before.

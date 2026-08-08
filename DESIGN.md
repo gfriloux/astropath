@@ -1,51 +1,53 @@
 # DESIGN.md — astropath
 
-> Ce document définit l'esprit, la structure et les **invariants** d'astropath.
-> Avant d'ajouter quoi que ce soit, vérifie que ça s'inscrit ici. Si ce n'est pas
-> le cas, la réponse est non.
+> This document defines the spirit, the structure and the **invariants** of astropath.
+> Before adding anything, check that it fits in here. If it does not, the answer
+> is no.
+>
+> Docs and code comments are in English; the **UI copy is in French**. Quoted strings
+> in this document are the literal UI text.
 
 ---
 
-## Ce qu'est astropath
+## What astropath is
 
-astropath est un **widget de visu rapide des mails** pour la barre de bureau
-**Quickshell / DankMaterialShell** (Material 3, thème Catppuccin Mocha). Une icône
-dans la barre affiche un **badge de non-lus** ; au clic, un **popup** ancré sous
-l'icône liste les fils non-lus, permet de chercher, de retaguer et d'ouvrir un fil.
+astropath is a **mail-at-a-glance widget** for the **Quickshell / DankMaterialShell**
+desktop bar (Material 3, Catppuccin Mocha theme). An icon in the bar shows an
+**unread badge**; on click, a **popup** anchored under the icon lists unread threads,
+and lets you search, retag and open a thread.
 
-La source de vérité est la **base notmuch** (index Xapian sur un Maildir). astropath
-ne parle qu'à `notmuch` : il lit (`notmuch search`/`count`/`show --format=json`) et
-mute des tags (`notmuch tag`). Tout raisonne par **fil (thread)** et par **tag**,
-jamais par dossier. astropath **n'indexe jamais** (pas de `notmuch new`) : l'indexation
-des nouveaux mails est le travail de la machinerie de synchro externe (offlineimap /
-imapnotify). Le rafraîchissement se fait par **polling** (re-query périodique).
+The source of truth is the **notmuch database** (Xapian index over a Maildir). astropath
+only talks to `notmuch`: it reads (`notmuch search`/`count`/`show --format=json`) and
+mutates tags (`notmuch tag`). Everything is reasoned about by **thread** and by **tag**,
+never by folder. astropath **never indexes** (no `notmuch new`): indexing new mail is the
+job of the external sync machinery (offlineimap / imapnotify). Refreshing happens by
+**polling** (periodic re-query).
 
-astropath est une **surface de triage** au-dessus de notmuch. Comment un fil s'ouvre
-ensuite (client de lecture, commande lancée) est de la **configuration**, pas du design :
-ce document n'en parle pas.
+astropath is a **triage surface** on top of notmuch. How a thread is opened afterwards
+(reading client, command launched) is **configuration**, not design: this document does
+not cover it.
 
-Ce n'est **pas** :
+It is **not**:
 
-- Un client IMAP/SMTP. astropath ne parle pas au réseau : la synchro est le travail
-  d'**offlineimap** (fetch) et d'**imapnotify** (push/notification). astropath observe
-  leur état, il ne les pilote pas au-delà d'un refresh manuel.
-- Un gestionnaire de dossiers. Le modèle est **tag-only**. « Archiver » = retirer
-  `tag:inbox`, pas déplacer un fichier.
+- An IMAP/SMTP client. astropath does not talk to the network: syncing is the job of
+  **offlineimap** (fetch) and **imapnotify** (push/notification). astropath observes
+  their state, it does not drive them beyond a manual refresh.
+- A folder manager. The model is **tag-only**. "Archiving" = removing
+  `tag:inbox`, not moving a file.
 
-Aujourd'hui un seul compte est configuré, mais rien dans le
-modèle ne le suppose : voir l'invariant *agnostique au compte* ci-dessous.
+Today a single account is configured, but nothing in the model assumes that: see the
+*account-agnostic* invariant below.
 
 ---
 
-## Le pipeline — trois étages
+## The pipeline — three stages
 
-astropath est une transformation à trois étages. Chaque étage a un contrat clair et
-est **indépendamment testable**. Rien ne traverse un étage qui ne devrait pas : la
-sortie brute de notmuch n'entre pas dans la vue, le QML n'appelle jamais `notmuch`
-directement.
+astropath is a three-stage transformation. Each stage has a clear contract and is
+**independently testable**. Nothing crosses a stage that should not: raw notmuch output
+does not enter the view, and the QML never calls `notmuch` directly.
 
 ```
-  base notmuch                                          popup Quickshell
+  notmuch database                                      Quickshell popup
       │                                                        ▲
       ▼                                                        │
   ┌────────┐        ┌─────────────┐        ┌──────────────────┐
@@ -54,156 +56,154 @@ directement.
   └────────┘        └─────────────┘        └──────────────────┘
 ```
 
-### 1. `query` — exécution notmuch
+### 1. `query` — notmuch execution
 
-La seule couche qui lance `notmuch`. Construit des requêtes, exécute
-`notmuch search`/`count`/`show` en `--format=json`, et applique les mutations
-`notmuch tag`. Sortie : du **JSON brut notmuch**, déterministe pour une base donnée.
-Cet étage ne connaît rien à la présentation.
+The only layer that runs `notmuch`. Builds queries, runs
+`notmuch search`/`count`/`show` in `--format=json`, and applies `notmuch tag`
+mutations. Output: **raw notmuch JSON**, deterministic for a given database.
+This stage knows nothing about presentation.
 
-### 2. `model` — modèle de domaine
+### 2. `model` — domain model
 
-Transforme le JSON notmuch en **modèle de fils** : expéditeur, sujet, snippet, heure,
-nombre de messages, tags, états (`unread`, `flagged`, `vip`). Tient l'état applicatif :
+Turns notmuch JSON into a **thread model**: sender, subject, snippet, time, message
+count, tags, states (`unread`, `flagged`, `vip`). Holds the application state:
 `unreadThreads`, `searchQuery`/`searchResults`, `selectedSavedSearch`, `savedSearches`
-(tags + compteurs), `syncStatus`, `focusedThreadId`, `lastSyncAt`. **Pur et testable** :
-mêmes entrées notmuch → même modèle (cf. golden tests, PROCEDURE_PLANS.md).
+(tags + counters), `syncStatus`, `focusedThreadId`, `lastSyncAt`. **Pure and testable**:
+same notmuch input → same model (see golden tests, PROCEDURE_PLANS.md).
 
-### 3. `view` — rendu Quickshell
+### 3. `view` — Quickshell rendering
 
-QML / Qt Quick. Consomme le modèle, n'appelle jamais `notmuch` en direct. Porte le
-système visuel ci-dessous au pixel près, en réutilisant les composants Material 3 de
-DankMaterialShell.
+QML / Qt Quick. Consumes the model, never calls `notmuch` directly. Carries the visual
+system below down to the pixel, reusing DankMaterialShell's Material 3 components.
 
-### Implémentation
+### Implementation
 
-astropath est un **plugin DankMaterialShell** (`plugin.json` à la racine + `src/`),
-installé dans `~/.config/DankMaterialShell/plugins/Astropath/`. Il hérite du thème
-(Catppuccin Mocha) et des composants Material 3 de DMS.
+astropath is a **DankMaterialShell plugin** (`plugin.json` at the root + `src/`),
+installed into `~/.config/DankMaterialShell/plugins/Astropath/`. It inherits DMS's theme
+(Catppuccin Mocha) and Material 3 components.
 
-- `query` → `src/query/queries.js` : builders d'argv notmuch (search/count/show/tag),
-  fonctions pures. Exécutés par `src/view/Notmuch.qml` (`Process` quickshell + `StdioCollector`).
-- `model` → `src/model/threads.js` (`parseSearch`, `parseCount`, `savedSearches` à
-  définitions injectées = config, `parseShow`) + `format.js` (`relativeTime`). Pur, testé
-  par goldens/unitaires (`tests/`, `just test` / `just bless`).
-- `view` → `src/view/` : `AstropathWidget` (barre + badge), `Cockpit` (popout : en-tête
-  sync, rail recherches, recherche live, liste, actions inline, navigation clavier),
-  `Settings` (config : client de lecture, intervalle, smart folders). Thème = DMS.
-
----
-
-## Invariants du domaine
-
-1. **notmuch fait foi ; lecture + tags seulement.** Toute donnée affichée vient de notmuch
-   (pas de cache parallèle). astropath query (lecture) et `notmuch tag` (mutation), rien
-   d'autre — **jamais `notmuch new`** : il n'indexe pas, c'est le rôle de la synchro externe.
-2. **Tag-only.** Aucune notion de dossier. Les actions sont des mutations de tags :
-   lu = `-unread`, archiver = `-inbox`, flag = `+flagged`, spam = `+spam`, etc.
-3. **Les smart folders sont des tags.** Les vues universelles (`Inbox`, `Flaggés`,
-   `Spam`…) et les **catégories** = des requêtes `tag:…` avec compteur, pas des entités
-   stockées. astropath n'embarque aucune taxonomie en dur : les catégories sont
-   **auto-découvertes** depuis les tags de la base (`notmuch search --output=tags`,
-   conséquence directe de *notmuch fait foi*). Sont exclus de l'auto les **tags machine**
-   (états : `unread`, `attachment`, `signed`, `replied`… — une liste de tags
-   *opérationnels*, pas une taxonomie perso). La config utilisateur n'**amende** que :
-   masquer un tag, renommer son libellé, changer sa couleur, ou ajouter une recherche
-   **composée** (que l'auto, limitée au `tag:X` simple, ne peut pas générer).
-4. **Agnostique au compte.** astropath ne modélise pas les comptes : un compte n'est
-   qu'une facette de requête notmuch (chemin ou tag). Mono ou multi-compte se modélisent
-   via les recherches sauvegardées, sans traitement spécial — conséquence directe du
-   raisonnement tag-only. Des vues par compte plus riches (badges séparés, bascule) seront
-   des PLANs si le besoin émerge.
-5. **Best-effort sur la synchro.** L'état de synchro (`live | idle | syncing | error`)
-   est *observé* (imapnotify / offlineimap / `notmuch new`). Une synchro indisponible
-   dégrade l'affichage, ne fait jamais planter le widget.
-6. **Déterminisme de la couche données.** `query` + `model` sont déterministes pour une
-   base notmuch figée — c'est ce qui rend les golden tests possibles.
+- `query` → `src/query/queries.js`: notmuch argv builders (search/count/show/tag),
+  pure functions. Executed by `src/view/Notmuch.qml` (quickshell `Process` + `StdioCollector`).
+- `model` → `src/model/threads.js` (`parseSearch`, `parseCount`, `savedSearches` with
+  injected definitions = config, `parseShow`) + `format.js` (`relativeTime`). Pure, tested
+  by goldens/unit tests (`tests/`, `just test` / `just bless`).
+- `view` → `src/view/`: `AstropathWidget` (bar + badge), `Cockpit` (popout: sync header,
+  saved-search rail, live search, list, inline actions, keyboard navigation),
+  `Settings` (config: reading client, interval, smart folders). Theme = DMS.
 
 ---
 
-## Système visuel (impératif)
+## Domain invariants
 
-Hi-fi : couleurs, typo, espacements et rayons sont définitifs. Le prototype HTML
-d'origine (3 directions A/B/C + états annexes) vit dans `tmp/design_handoff_astropath/`
-(non commité) ; les valeurs durables sont recopiées ici pour survivre.
+1. **notmuch is the source of truth; reads + tags only.** Every displayed piece of data
+   comes from notmuch (no parallel cache). astropath queries (read) and runs `notmuch tag`
+   (mutation), nothing else — **never `notmuch new`**: it does not index, that is the job
+   of the external sync.
+2. **Tag-only.** No notion of folders. Actions are tag mutations: read = `-unread`,
+   archive = `-inbox`, flag = `+flagged`, spam = `+spam`, and so on.
+3. **Smart folders are tags.** Universal views (`Inbox`, `Flagged`, `Spam`…) and
+   **categories** are `tag:…` queries with a counter, not stored entities. astropath ships
+   no hardcoded taxonomy: categories are **auto-discovered** from the database's tags
+   (`notmuch search --output=tags`, a direct consequence of *notmuch is the source of
+   truth*). Excluded from auto-discovery are **machine tags** (states: `unread`,
+   `attachment`, `signed`, `replied`… — a list of *operational* tags, not a personal
+   taxonomy). User config only **amends**: hide a tag, rename its label, change its color,
+   or add a **composed** search (which auto-discovery, limited to a plain `tag:X`, cannot
+   generate).
+4. **Account-agnostic.** astropath does not model accounts: an account is just a facet of
+   a notmuch query (path or tag). Single- or multi-account setups are modelled through
+   saved searches, with no special handling — a direct consequence of tag-only reasoning.
+   Richer per-account views (separate badges, switching) will be PLANs if the need shows up.
+5. **Best-effort on sync.** Sync state (`live | idle | syncing | error`) is *observed*
+   (imapnotify / offlineimap / `notmuch new`). An unavailable sync degrades the display,
+   it never crashes the widget.
+6. **Deterministic data layer.** `query` + `model` are deterministic for a frozen notmuch
+   database — that is what makes golden tests possible.
+
+---
+
+## Visual system (mandatory)
+
+Hi-fi: colors, typography, spacing and radii are final. The original HTML prototype
+(3 directions A/B/C + secondary states) lives in `tmp/design_handoff_astropath/`
+(not committed); the lasting values are copied here so they survive.
 
 ### Palette — Catppuccin Mocha
 
-| Rôle | Hex |
+| Role | Hex |
 |---|---|
-| Fond / base | `#1e1e2e` |
+| Background / base | `#1e1e2e` |
 | Mantle | `#181825` |
 | Crust | `#11111b` |
-| Conteneur surélevé | `#313244` |
-| Conteneur le plus haut | `#45475a` |
-| Outline / séparateurs | `#6c7086` |
-| Texte | `#cdd6f4` |
-| Texte secondaire | `#a6adc8` |
-| **Accent primaire — Mauve** | `#cba6f7` |
-| Accent secondaire — Lavender | `#b4befe` |
-| Non-lu / urgent / erreur — Red | `#f38ba8` |
+| Raised container | `#313244` |
+| Highest container | `#45475a` |
+| Outline / separators | `#6c7086` |
+| Text | `#cdd6f4` |
+| Secondary text | `#a6adc8` |
+| **Primary accent — Mauve** | `#cba6f7` |
+| Secondary accent — Lavender | `#b4befe` |
+| Unread / urgent / error — Red | `#f38ba8` |
 | Flag / warning — Peach | `#fab387` |
-| Succès / live — Green | `#a6e3a1` |
+| Success / live — Green | `#a6e3a1` |
 | Info — Blue | `#89b4fa` |
-| Accent froid — Teal | `#94e2d5` |
+| Cool accent — Teal | `#94e2d5` |
 
-Mauve **avec parcimonie** : focus, sélection, badge actif, bouton Composer. Jamais en
-aplat massif.
+Mauve **sparingly**: focus, selection, active badge, Compose button. Never as a massive
+flat fill.
 
-### Mapping couleur des tags
+### Tag color mapping
 
-Chip = `background: rgba(couleur, 0.16)` + `color: couleur`.
+Chip = `background: rgba(color, 0.16)` + `color: color`.
 
-Tags universels (couleur fixe) :
+Universal tags (fixed color):
 
-| Tag | notmuch | Couleur |
+| Tag | notmuch | Color |
 |---|---|---|
 | inbox | `tag:inbox` | `#89b4fa` |
-| flaggé | `tag:flagged` | `#fab387` |
+| flagged | `tag:flagged` | `#fab387` |
 | spam | `tag:spam` | `#f38ba8` |
 
-Les **tags de catégorie** (auto-découverts) reçoivent chacun une couleur **dérivée par
-hash déterministe** du nom du tag sur la palette catégories — même tag → même couleur,
-sans config (et goldenable). L'utilisateur peut **surcharger** la couleur d'un tag donné.
-astropath ne code aucune taxonomie en dur (cf. invariant *agnostique au compte*). Palette
-catégories : Lavender `#b4befe`, Green `#a6e3a1`, Teal `#94e2d5`, Peach `#fab387`,
-Yellow `#f9e2af`, Mauve `#cba6f7`.
+**Category tags** (auto-discovered) each get a color **derived by deterministic hash**
+of the tag name over the category palette — same tag → same color, with no config (and
+goldenable). The user can **override** the color of a given tag. astropath hardcodes no
+taxonomy (see the *account-agnostic* invariant). Category palette: Lavender `#b4befe`,
+Green `#a6e3a1`, Teal `#94e2d5`, Peach `#fab387`, Yellow `#f9e2af`, Mauve `#cba6f7`.
 
-### Formes & profondeur
+### Shapes & depth
 
-- Rayon principal **12px** (cartes, popup) ; 6–10px pour chips/petits boutons ; 14px barre.
-- Profondeur par **empilement de surfaces**, pas d'ombres dures. Seule ombre :
-  `0 16px 48px rgba(0,0,0,.5)` sous le popup. Blur de fond : `blur(18px)`.
-- **Séparateurs de liste** : filet 1px en **dégradé** (fondu aux deux bords), teinte
-  `outline`. Posé entre les fils ; s'efface (en fondu) autour de la carte active/survolée
-  pour ne jamais la trancher.
-- Typo : **Inter** (UI), **JetBrains Mono** (requêtes/heures/compteurs),
-  **Material Symbols Rounded** (icônes, fill 0).
+- Main radius **12px** (cards, popup); 6–10px for chips/small buttons; 14px for the bar.
+- Depth by **stacking surfaces**, no hard shadows. The only shadow:
+  `0 16px 48px rgba(0,0,0,.5)` under the popup. Background blur: `blur(18px)`.
+- **List separators**: a 1px **gradient** hairline (fading out at both ends), `outline`
+  tint. Placed between threads; it fades away around the active/hovered card so it never
+  cuts through it.
+- Typography: **Inter** (UI), **JetBrains Mono** (queries/times/counters),
+  **Material Symbols Rounded** (icons, fill 0).
 
-### Direction visuelle — C (cockpit)
+### Visual direction — C (cockpit)
 
-La direction retenue est **C — cockpit** : un mini-client dense, orienté power-user clavier.
-Layout de référence (le prototype HTML détaille le pixel-perfect) :
+The chosen direction is **C — cockpit**: a dense mini-client, aimed at keyboard
+power-users. Reference layout (the HTML prototype has the pixel-perfect detail):
 
-- **Largeur ~680px** (popup ~680×680) — bien au-delà de la cible 380–420px des autres
-  directions, assumé : le cockpit privilégie la densité d'information et la lisibilité à
-  la compacité.
-- **En-tête télémétrie** pleine largeur : wordmark, état `SYNC LIVE` + barres de signal
-  animées, refresh, bouton **Composer**.
-- **Rail gauche (~172px)** : liste verticale des recherches sauvegardées (icône + label +
-  compteur), sélection marquée par un **fond tinté** (mauve translucide) avec label et
-  compteur en Mauve — pas de bord-gauche.
-- **Zone principale** : barre de recherche + liste de fils en densité moyenne (avatar 32px).
-  Le fil sous le curseur clavier a un **fond tinté** (mauve translucide) et révèle la
-  **rangée d'actions inline** (lu / archiver / flag / retag / supprimer / ouvrir).
-- **Pied** : chips de raccourcis clavier (`j`/`k`, `⏎`, `e`, `#`).
+- **Width ~680px** (popup ~680×680) — well beyond the 380–420px target of the other
+  directions, and deliberately so: the cockpit favors information density and readability
+  over compactness.
+- **Full-width telemetry header**: wordmark, `SYNC LIVE` state + animated signal bars,
+  refresh, **Compose** button.
+- **Left rail (~172px)**: vertical list of saved searches (icon + label + counter),
+  selection marked by a **tinted background** (translucent mauve) with label and counter
+  in Mauve — no left border.
+- **Main area**: search bar + thread list at medium density (32px avatar). The thread
+  under the keyboard cursor gets a **tinted background** (translucent mauve) and reveals
+  the **inline action row** (read / archive / flag / retag / delete / open).
+- **Footer**: keyboard shortcut chips (`j`/`k`, `⏎`, `e`, `#`).
 
-Ouvrir un fil (`⏎`) et **Composer** délèguent au client externe configurable : astropath
-déclenche, il n'affiche ni ne compose lui-même (cf. *surface de triage* ci-dessus).
+Opening a thread (`⏎`) and **Compose** delegate to the configurable external client:
+astropath triggers, it neither displays nor composes itself (see *triage surface* above).
 
 ---
 
-## Clin d'œil Adeptus Mechanicus
+## Adeptus Mechanicus nod
 
-Subtil, jamais kitsch. Vocabulaire « warp / astropathicus », un seul cog dans l'en-tête,
-état vide « Le warp est calme. ». C'est un assaisonnement, pas un thème.
+Subtle, never kitsch. "Warp / astropathicus" vocabulary, a single cog in the header,
+an empty state reading « Le warp est calme. ». It is seasoning, not a theme.
