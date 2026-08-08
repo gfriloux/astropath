@@ -1,96 +1,97 @@
 # astropath
 
-Widget mail pour **Quickshell / DankMaterialShell**. Un badge de non-lus dans la barre,
-un popup pour scanner les fils, chercher, retaguer et ouvrir un mail. Les données viennent
-de **notmuch** (Maildir indexé) ; tout raisonne par **fil** et par **tag**.
+A mail widget for **Quickshell / DankMaterialShell**. An unread badge in the bar, and a
+popup to scan threads, search, retag and open a mail. Data comes from **notmuch**
+(indexed Maildir); everything is reasoned about by **thread** and by **tag**.
 
-> Le warp est calme. L'astropathicus veille.
+> The warp is calm. The astropath keeps watch.
 
-## Pile
+## Stack
 
-- **Vue** : QML / Qt Quick via [Quickshell](https://quickshell.outfoxxed.me/), Material 3,
-  thème Catppuccin Mocha.
-- **Données** : `notmuch` (lecture + mutation de tags). Synchro assurée par `offlineimap`
-  + `imapnotify`. L'ouverture d'un fil délègue à un client mail externe configurable
-  (`alot` actuellement) ; astropath est une surface de **triage**, pas un client complet.
+- **View**: QML / Qt Quick via [Quickshell](https://quickshell.outfoxxed.me/), Material 3,
+  Catppuccin Mocha theme.
+- **Data**: `notmuch` (reading + tag mutation). Syncing is handled by `offlineimap`
+  + `imapnotify`. Opening a thread delegates to a configurable external mail client
+  (`alot` today); astropath is a **triage** surface, not a full client.
 
-Architecture, invariants et système visuel : [`DESIGN.md`](./DESIGN.md).
+Architecture, invariants and visual system: [`DESIGN.md`](./DESIGN.md).
 
-## Développement
+## Development
 
-Le projet utilise un dev shell Nix (Quickshell, notmuch, qmllint/qmlformat, just) :
+The project uses a Nix dev shell (Quickshell, notmuch, qmllint/qmlformat, just):
 
 ```bash
 nix develop
-just            # liste les cibles
+just            # list targets
 just ci         # format + lint + test
-just run        # lance le widget pour essai manuel
+just run        # launch the widget for manual testing
 ```
 
-Hooks pre-commit : `pre-commit install`. `just run` lie le plugin dans le dossier DMS,
-`just reload` recharge DMS (le toggle plugin ne relit pas le QML).
+Pre-commit hooks: `pre-commit install`. `just run` links the plugin into the DMS folder,
+`just reload` reloads DMS (toggling the plugin does not re-read the QML).
 
-### Tester la version en cours dans une barre isolée
+### Testing the in-progress version in an isolated bar
 
-`just run` partage le DMS quotidien. Pour itérer **sans** toucher à l'instance installée
-(via le module home-manager), `just dev-bar` lance une **2ᵉ instance DMS isolée** :
+`just run` shares your daily DMS. To iterate **without** touching the installed instance
+(via the home-manager module), `just dev-bar` starts a **second, isolated DMS instance**:
 
 ```bash
-just dev-bar                       # depuis le dev shell
-# ou, sans cloner le repo dans le PATH :
-nix run github:gfriloux/astropath#dev-bar -- /chemin/vers/le/worktree
+just dev-bar                       # from the dev shell
+# or, without cloning the repo into PATH:
+nix run github:gfriloux/astropath#dev-bar -- /path/to/the/worktree
 ```
 
-Elle utilise un `XDG_CONFIG_HOME`/`XDG_CACHE_HOME` dédiés (`~/.local/state/astropath-dev/`),
-donc settings, dossier de plugins et **qmlcache** sont séparés du DMS quotidien (édite →
-relance, pas de purge de cache à faire). Le worktree est monté en symlink live sous le
-libellé **« Astropath (dev) »** — l'id du plugin reste `astropath` (il doit rester aligné
-avec `pluginId` dans `Settings.qml`), seul l'affichage change pour distinguer les deux
-barres. À activer une fois dans *Settings → Plugins* de cette instance ; si elle chevauche
-la barre du haut, la déplacer une fois (autre écran/bord), ça persiste dans sa config.
+It uses a dedicated `XDG_CONFIG_HOME`/`XDG_CACHE_HOME` (`~/.local/state/astropath-dev/`),
+so settings, plugin folder and **qmlcache** are separate from the daily DMS (edit →
+restart, no cache purge needed). The worktree is mounted as a live symlink under the label
+**"Astropath (dev)"** — the plugin id stays `astropath` (it must stay aligned with
+`pluginId` in `Settings.qml`), only the display name changes, to tell the two bars apart.
+Enable it once in *Settings → Plugins* of that instance; if it overlaps the top bar, move
+it once (other screen/edge), which persists in its config.
 
 ## Installation
 
-astropath est un **plugin DankMaterialShell**. Via le module home-manager :
+astropath is a **DankMaterialShell plugin**. Via the home-manager module:
 
 ```nix
 inputs.astropath.url = "github:gfriloux/astropath";
 
-# config home-manager :
+# home-manager config:
 imports = [ inputs.astropath.homeModules.default ];
 programs.astropath.enable = true;
 ```
 
-Le module installe le plugin dans `~/.config/DankMaterialShell/plugins/Astropath/` ;
-il reste à l'**activer dans DMS** (Settings → Plugins → Astropath) et à configurer le
-client de lecture + les smart folders dans ses réglages.
+The module installs the plugin into `~/.config/DankMaterialShell/plugins/Astropath/`;
+you still have to **enable it in DMS** (Settings → Plugins → Astropath) and configure the
+reading client and smart folders in its settings.
 
-## Structure du code
+## Code structure
 
-- `plugin.json` — manifest du plugin DMS (type widget, permissions, icône).
-- `src/query/` — construction des commandes notmuch (argv), JS pur.
-- `src/model/` — transforms `notmuch` JSON → modèle (`parseSearch`/`parseCount`/
-  `savedSearches`/`parseShow`) + `format.js`, JS pur testé par goldens.
-- `src/view/` — plugin QML : widget barre, cockpit (popout), réglages. Thème hérité de DMS.
-- `tests/` — fixtures notmuch + goldens. `just test` (qmltestrunner), `just bless`
-  (régénère). Données de test synthétiques.
-- `nix/hm-module.nix` — module home-manager (installe le plugin, instance quotidienne).
-- `scripts/astropath-dev` — lance une instance DMS isolée sur le worktree (`just dev-bar`).
+- `plugin.json` — DMS plugin manifest (widget type, permissions, icon).
+- `src/query/` — notmuch command construction (argv), pure JS.
+- `src/model/` — `notmuch` JSON → model transforms (`parseSearch`/`parseCount`/
+  `savedSearches`/`parseShow`) + `format.js`, pure JS tested by goldens.
+- `src/view/` — QML plugin: bar widget, cockpit (popout), settings. Theme inherited from DMS.
+- `tests/` — notmuch fixtures + goldens. `just test` (qmltestrunner), `just bless`
+  (regenerates). Synthetic test data.
+- `nix/hm-module.nix` — home-manager module (installs the plugin, daily instance).
+- `scripts/astropath-dev` — starts an isolated DMS instance on the worktree (`just dev-bar`).
 
-## Contribution
+## Contributing
 
-On ne code pas sans plan validé. Lire [`DESIGN.md`](./DESIGN.md) puis
-[`PROCEDURE_PLANS.md`](./PROCEDURE_PLANS.md) avant tout changement. Politique git
-**hybride** : travail sur branche dédiée, commits atomiques (Conventional Commits),
-merge/push/tag réservés au mainteneur.
+No code without an approved plan. Read [`DESIGN.md`](./DESIGN.md) then
+[`PROCEDURE_PLANS.md`](./PROCEDURE_PLANS.md) before any change. Git policy is
+**hybrid**: work on a dedicated branch, atomic commits (Conventional Commits),
+merge/push/tag reserved for the maintainer.
 
 ## Release
 
-- **Changelog** : Conventional Commits → `CHANGELOG.md` via `git-cliff` (`just changelog`).
-- **Release** : sur tag `v*`, le workflow GitHub génère les notes (git-cliff) et crée la
-  release. Pas d'artefact binaire (le plugin = source ; install via flake épinglé au tag).
-- **Dépendances** : Renovate (flake.lock + GitHub Actions, MAJ groupées hebdomadaires).
+- **Changelog**: Conventional Commits → `CHANGELOG.md` via `git-cliff` (`just changelog`).
+- **Release**: on a `v*` tag, the GitHub workflow generates the notes (git-cliff) and
+  creates the release. No binary artifact (the plugin is source; install via a flake
+  pinned to the tag).
+- **Dependencies**: Renovate (flake.lock + GitHub Actions, weekly grouped updates).
 
-## Licence
+## License
 
-Voir [`LICENSE`](./LICENSE).
+See [`LICENSE`](./LICENSE).

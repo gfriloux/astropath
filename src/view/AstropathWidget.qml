@@ -1,6 +1,5 @@
-// Widget de barre astropath (plugin DankMaterialShell).
-// Phase 1 : icône mail + badge de non-lus (compteur factice). Le service Notmuch et le
-// popout cockpit arrivent aux phases suivantes. Thème et composants hérités de DMS.
+// astropath bar widget (DankMaterialShell plugin). Mail icon + unread badge, backed by the
+// Notmuch service; clicking opens the cockpit popout. Theme and components inherited from DMS.
 import QtQuick
 import qs.Common
 import qs.Widgets
@@ -9,11 +8,11 @@ import qs.Modules.Plugins
 PluginComponent {
     id: root
 
-    // Compteur de fils non-lus, alimenté par le service Notmuch (polling).
+    // Unread thread counter, fed by the Notmuch service (polling).
     readonly property int unreadCount: notmuchSvc.unreadCount
 
-    // Universels épinglés en tête du rail (couleurs fixes DESIGN). Le reste des catégories
-    // est auto-découvert depuis les tags de la base ; la config ne fait qu'amender.
+    // Universals pinned at the top of the rail (fixed DESIGN colors). The rest of the
+    // categories is auto-discovered from the database's tags; config only amends.
     readonly property var universals: [
         {
             "key": "inbox",
@@ -35,7 +34,7 @@ PluginComponent {
         }
     ]
 
-    // Amendements lus des réglages (pluginData) : overrides par tag + recherches composées.
+    // Amendments read from the settings (pluginData): per-tag overrides + composed searches.
     readonly property var cfgOverrides: (pluginData && pluginData.tagOverrides) ? pluginData.tagOverrides : []
     readonly property var cfgCustom: (pluginData && pluginData.customSearches) ? pluginData.customSearches : []
     readonly property int cfgIntervalMs: (pluginData && pluginData.pollSeconds > 0) ? pluginData.pollSeconds * 1000 : 20000
@@ -64,7 +63,7 @@ PluginComponent {
                 color: root.unreadCount > 0 ? Theme.primary : Theme.surfaceTextMedium
             }
 
-            // Anneau qui pulse tant qu'il y a des non-lus (désactivé si animations = None).
+            // Ring pulsing while there are unread threads (disabled when animations = None).
             Rectangle {
                 id: pulseRing
                 anchors.centerIn: badge
@@ -98,7 +97,7 @@ PluginComponent {
                 }
             }
 
-            // Badge de non-lus, ancré en haut-droite de l'icône.
+            // Unread badge, anchored at the icon's top-right.
             StyledRect {
                 id: badge
                 visible: root.unreadCount > 0
@@ -120,7 +119,7 @@ PluginComponent {
         }
     }
 
-    // Popout cockpit ouvert au clic sur l'icône.
+    // Cockpit popout, opened by clicking the icon.
     popoutContent: Component {
         Cockpit {
             notmuch: notmuchSvc

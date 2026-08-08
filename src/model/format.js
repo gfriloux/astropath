@@ -1,7 +1,8 @@
 .pragma library
 
-// Temps relatif « il y a N … » à partir d'un timestamp (ms) et d'un now (ms).
-// now est passé en argument → fonction pure, testable.
+// Relative time (« il y a N … ») from a timestamp (ms) and a now (ms).
+// now is passed as an argument → pure, testable function. Returned strings are UI copy
+// and stay in French.
 function relativeTime(epochMs, nowMs) {
     if (!epochMs)
         return "";
@@ -18,7 +19,7 @@ function relativeTime(epochMs, nowMs) {
     return "il y a " + d + " j";
 }
 
-// Initiales (1-2 lettres) du premier expéditeur, pour l'avatar monogramme.
+// Initials (1-2 letters) of the first sender, for the monogram avatar.
 function initials(authors) {
     var first = String(authors || "").split(",")[0].trim();
     if (!first)
@@ -29,7 +30,7 @@ function initials(authors) {
     return first.slice(0, 2).toUpperCase();
 }
 
-// Parse une saisie de retag « +a -b c » → { add: [...], remove: [...] } (bare = add).
+// Parses a retag input « +a -b c » → { add: [...], remove: [...] } (bare token = add).
 function parseRetag(str) {
     var add = [];
     var remove = [];
@@ -53,7 +54,7 @@ function parseRetag(str) {
     };
 }
 
-// Index de couleur déterministe (hash du nom mod n) pour la teinte de l'avatar.
+// Deterministic color index (name hash mod n) for the avatar tint.
 function colorIndex(name, n) {
     if (n <= 0)
         return 0;

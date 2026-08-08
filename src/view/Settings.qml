@@ -1,7 +1,7 @@
-// Réglages du plugin (PluginsTab de DMS). Déclaratif : chaque *Setting auto-persiste dans
-// pluginData via son settingKey. Le widget lit pluginData (readerCommand, pollSeconds,
-// tagOverrides, customSearches). La taxonomie est auto-découverte depuis notmuch ; la
-// config ne porte que les AMENDEMENTS (masquer/renommer/recolorer + recherches composées).
+// Plugin settings (DMS's PluginsTab). Declarative: each *Setting auto-persists into
+// pluginData through its settingKey. The widget reads pluginData (readerCommand,
+// pollSeconds, tagOverrides, customSearches). The taxonomy is auto-discovered from notmuch;
+// config only carries the AMENDMENTS (hide/rename/recolor + composed searches).
 import QtQuick
 import qs.Common
 import qs.Widgets

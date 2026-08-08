@@ -17,7 +17,7 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
-      # Même porte de qualité que `just ci` en local et que les hooks pre-commit.
+      # Same quality gate as `just ci` locally and as the pre-commit hooks.
       - name: just ci
         run: nix develop --command just ci
 

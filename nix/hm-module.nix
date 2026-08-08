@@ -1,7 +1,7 @@
-# Module home-manager : installe astropath comme plugin DankMaterialShell.
+# home-manager module: installs astropath as a DankMaterialShell plugin.
 #
-# Assemble le plugin (plugin.json + src/) dans le store et le lie dans le dossier de
-# plugins de DMS. L'activation se fait ensuite dans DMS (Settings → Plugins → Astropath).
+# Assembles the plugin (plugin.json + src/) into the store and links it into DMS's plugin
+# folder. Enabling it then happens inside DMS (Settings → Plugins → Astropath).
 {
   config,
   lib,
@@ -17,13 +17,13 @@
   '';
 in {
   options.programs.astropath.enable =
-    lib.mkEnableOption "astropath — widget mail notmuch pour DankMaterialShell";
+    lib.mkEnableOption "astropath — notmuch mail widget for DankMaterialShell";
 
   config = lib.mkIf cfg.enable {
-    # Le plugin est découvert par DMS dans ~/.config/DankMaterialShell/plugins/.
+    # DMS discovers the plugin in ~/.config/DankMaterialShell/plugins/.
     xdg.configFile."DankMaterialShell/plugins/Astropath".source = plugin;
 
-    # notmuch est requis au runtime (le widget l'exécute).
+    # notmuch is required at runtime (the widget executes it).
     home.packages = [pkgs.notmuch];
   };
 }

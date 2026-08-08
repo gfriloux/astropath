@@ -1,13 +1,13 @@
 .pragma library
 
-// Construction des arguments (argv) des commandes notmuch. Fonctions pures, testables.
-// On retourne un tableau d'arguments — jamais une ligne shell : la requête (qui peut
-// contenir des espaces) reste UN seul élément, pas de découpage ni d'injection shell.
+// Argument (argv) construction for notmuch commands. Pure, testable functions.
+// We return an argument array — never a shell line: the query (which may contain
+// spaces) stays as ONE element, so there is no splitting and no shell injection.
 
-// Fils non-lus de la boîte de réception (cf. DESIGN.md : tag-only).
+// Unread threads in the inbox (see DESIGN.md: tag-only).
 var UNREAD_QUERY = "tag:inbox and tag:unread";
 
-// notmuch search 'query' → résumé de fils en JSON.
+// notmuch search 'query' → thread summaries as JSON.
 function search(query) {
     return ["search", "--format=json", query];
 }
@@ -16,14 +16,14 @@ function searchUnread() {
     return search(UNREAD_QUERY);
 }
 
-// notmuch search --output=tags '*' → liste de tous les tags de la base (texte, 1/ligne).
-// Sert à découvrir la taxonomie (les catégories du rail en dérivent). Pas de --format=json :
-// la sortie tags est déjà une liste de lignes brutes.
+// notmuch search --output=tags '*' → every tag in the database (text, one per line).
+// Used to discover the taxonomy (the rail's categories derive from it). No --format=json:
+// the tags output is already a list of raw lines.
 function tags() {
     return ["search", "--output=tags", "*"];
 }
 
-// notmuch count 'query' → entier. output optionnel : "messages" (défaut notmuch) ou "threads".
+// notmuch count 'query' → integer. Optional output: "messages" (notmuch default) or "threads".
 function count(query, output) {
     var args = ["count"];
     if (output)
@@ -32,13 +32,13 @@ function count(query, output) {
     return args;
 }
 
-// notmuch show 'thread:<id>' → arbre du fil en JSON (en-têtes + corps, pour le snippet).
+// notmuch show 'thread:<id>' → thread tree as JSON (headers + body, for the snippet).
 function showThread(threadId) {
     return ["show", "--format=json", "thread:" + threadId];
 }
 
-// notmuch tag +a -b -- 'thread:<id>' → mutation de tags d'un fil.
-// ops = { add: [tags], remove: [tags] }. Le "--" sépare les ops de la requête.
+// notmuch tag +a -b -- 'thread:<id>' → tag mutation on a thread.
+// ops = { add: [tags], remove: [tags] }. The "--" separates the ops from the query.
 function tagThread(threadId, ops) {
     ops = ops || {};
     var args = ["tag"];

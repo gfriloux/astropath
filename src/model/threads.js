@@ -1,15 +1,15 @@
 .pragma library
 
-// Transforms du modèle de fils. Fonctions pures : mêmes entrées notmuch → même sortie.
-// Entrée = JSON déjà parsé de notmuch ; sortie = modèle de domaine d'astropath.
+// Thread model transforms. Pure functions: same notmuch input → same output.
+// Input = already-parsed notmuch JSON; output = astropath's domain model.
 
 function hasTag(tags, t) {
     return tags.indexOf(t) !== -1;
 }
 
-// notmuch search --format=json (résumé de fils) → Thread[].
-// Champs notmuch : thread, date_relative, total, authors, subject, tags.
-// Le résumé search n'a pas de corps : le snippet est ajouté ailleurs (show).
+// notmuch search --format=json (thread summaries) → Thread[].
+// notmuch fields: thread, date_relative, total, authors, subject, tags.
+// The search summary carries no body: the snippet is added elsewhere (show).
 function parseSearch(rows) {
     return rows.map(function (r) {
         var tags = r.tags || [];
@@ -26,13 +26,13 @@ function parseSearch(rows) {
     });
 }
 
-// notmuch count → entier (la sortie est un nombre en texte, pas du JSON).
+// notmuch count → integer (the output is a number as text, not JSON).
 function parseCount(output) {
     return parseInt(String(output).trim(), 10) || 0;
 }
 
-// notmuch search --output=tags → liste de tags (sortie texte, 1 tag par ligne).
-// On nettoie : trim de chaque ligne, lignes vides retirées. Ordre notmuch préservé.
+// notmuch search --output=tags → tag list (text output, one tag per line).
+// We clean up: trim each line, drop empty ones. notmuch's ordering is preserved.
 function parseTags(output) {
     return String(output || "").split("\n").map(function (l) {
         return l.trim();
@@ -41,8 +41,8 @@ function parseTags(output) {
     });
 }
 
-// Map tag → couleur, dérivée des définitions de smart folders (requêtes simples « tag:X »).
-// Les requêtes composées (espaces) ou sans couleur sont ignorées.
+// Map tag → color, derived from the smart folder definitions (plain « tag:X » queries).
+// Composed queries (with spaces) and colorless ones are ignored.
 function tagColors(definitions) {
     var m = {};
     (definitions || []).forEach(function (d) {
@@ -56,15 +56,15 @@ function tagColors(definitions) {
     return m;
 }
 
-// Tags machine/opérationnels : des ÉTATS, pas des catégories. Exclus de l'auto-découverte
-// du rail (les universels inbox/flagged/spam y figurent car déjà épinglés avec leur couleur
-// fixe). Ce n'est pas une taxonomie perso codée en dur (cf. DESIGN, inv. 3) : juste la liste
-// des tags que notmuch/la synchro posent pour signaler un état. L'utilisateur peut masquer
-// d'autres tags ou ré-afficher ceux-ci via les overrides.
+// Machine/operational tags: STATES, not categories. Excluded from the rail's
+// auto-discovery (the universal inbox/flagged/spam are in here because they are already
+// pinned with their fixed color). This is not a hardcoded personal taxonomy (see DESIGN,
+// inv. 3): just the list of tags that notmuch/the sync set to signal a state. The user can
+// hide other tags, or bring these back, through the overrides.
 var DEFAULT_TAG_BLOCKLIST = ["unread", "inbox", "flagged", "spam", "attachment", "signed", "encrypted", "replied", "sent", "draft", "passed", "new", "deleted"];
 
-// Palette catégories Catppuccin (DESIGN : teintes proposées pour l'assignation, hors
-// couleurs fixes des universels). Couleur stable d'un tag = hash déterministe sur la palette.
+// Catppuccin category palette (DESIGN: hues offered for assignment, excluding the
+// universals' fixed colors). A tag's stable color = deterministic hash over the palette.
 var CATEGORY_PALETTE = ["#b4befe", "#a6e3a1", "#94e2d5", "#fab387", "#f9e2af", "#cba6f7"];
 
 function colorForTag(tag) {
@@ -75,14 +75,14 @@ function colorForTag(tag) {
     return CATEGORY_PALETTE[h];
 }
 
-// Assemble la liste de définitions du rail à partir des tags découverts et de la config.
-// Pur ⇒ goldenable. cfg = {
-//   universals : définitions épinglées en tête (couleur fixe), telles quelles ;
-//   blocklist  : tags exclus de l'auto (défaut : DEFAULT_TAG_BLOCKLIST) ;
-//   overrides  : [{tag, label?, color?, hidden?}] — amende un tag découvert ;
-//   custom     : [{key,label,query,color}] — recherches composées, ajoutées en fin.
+// Builds the rail's definition list from the discovered tags and the config.
+// Pure ⇒ goldenable. cfg = {
+//   universals: definitions pinned at the top (fixed color), passed through as-is;
+//   blocklist : tags excluded from auto-discovery (default: DEFAULT_TAG_BLOCKLIST);
+//   overrides : [{tag, label?, color?, hidden?}] — amends a discovered tag;
+//   custom    : [{key,label,query,color}] — composed searches, appended at the end.
 // }
-// Sortie : universels ⊕ découverts(triés, hors blocklist & hors masqués) ⊕ custom.
+// Output: universals ⊕ discovered(sorted, minus blocklist & hidden) ⊕ custom.
 function buildDefinitions(tags, cfg) {
     cfg = cfg || {};
     var universals = cfg.universals || [];
@@ -120,10 +120,10 @@ function buildDefinitions(tags, cfg) {
     return universals.concat(discovered).concat(custom);
 }
 
-// Enrichit des smart folders de leur compteur. Les définitions (label/requête/couleur)
-// sont de la CONFIG utilisateur, injectées — jamais codées en dur ici (le modèle reste
-// générique et agnostique à la taxonomie perso). definitions = [{key,label,query,color}],
-// counts = { <key>: <entier> }.
+// Enriches smart folders with their counter. The definitions (label/query/color) are
+// user CONFIG, injected — never hardcoded here (the model stays generic and agnostic to
+// the personal taxonomy). definitions = [{key,label,query,color}],
+// counts = { <key>: <integer> }.
 function savedSearches(definitions, counts) {
     counts = counts || {};
     return (definitions || []).map(function (s) {
@@ -138,10 +138,10 @@ function savedSearches(definitions, counts) {
 }
 
 // --- notmuch show ----------------------------------------------------------
-// La sortie show est imbriquée : [ thread, … ] ; thread = [ [msgObj, replies], … ],
-// replies ayant la même forme (récursif). On en tire le snippet + en-têtes du fil.
+// The show output is nested: [ thread, … ]; thread = [ [msgObj, replies], … ], with
+// replies having the same shape (recursive). We pull the snippet + thread headers out of it.
 
-// Premier message du premier fil (parcours en profondeur).
+// First message of the first thread (depth-first walk).
 function firstMessage(showJson) {
     var threads = showJson || [];
     for (var i = 0; i < threads.length; i++) {
@@ -165,7 +165,7 @@ function firstInThread(thread) {
     return null;
 }
 
-// Corps texte/plain d'un message (descend dans les parties multipart).
+// text/plain body of a message (descends into multipart parts).
 function textBody(msg) {
     return collectText((msg && msg.body) || []);
 }
@@ -185,7 +185,7 @@ function collectText(parts) {
     return "";
 }
 
-// Réduit un texte à un aperçu d'une ligne (espaces compactés, tronqué).
+// Reduces a text to a one-line preview (whitespace collapsed, truncated).
 function snippet(text, maxLen) {
     maxLen = maxLen || 140;
     var s = String(text).replace(/\s+/g, " ").trim();
@@ -194,7 +194,7 @@ function snippet(text, maxLen) {
     return s;
 }
 
-// notmuch show 'thread:<id>' → { snippet, subject, from, date } du fil.
+// notmuch show 'thread:<id>' → { snippet, subject, from, date } for the thread.
 function parseShow(showJson) {
     var msg = firstMessage(showJson);
     if (!msg)

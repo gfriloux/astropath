@@ -14,14 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # historique complet pour git-cliff
+          fetch-depth: 0 # full history for git-cliff
 
       - uses: cachix/install-nix-action@v31
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
-      # Notes de version = section du tag courant (git-cliff, depuis le dev shell).
+      # Release notes = the current tag's section (git-cliff, from the dev shell).
       - name: Generate release notes
         run: nix develop --command git-cliff --latest --strip header --output RELEASE_NOTES.md
 

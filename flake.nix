@@ -1,8 +1,8 @@
 {
   description = ''
-    astropath — widget mail Quickshell / DankMaterialShell.
-    Visu rapide des mails indexés par notmuch (Maildir), raisonnement
-    par fil et par tag. Lecture dans alot, synchro offlineimap + imapnotify.
+    astropath — Quickshell / DankMaterialShell mail widget.
+    Mail-at-a-glance over a notmuch-indexed Maildir, reasoning by thread
+    and by tag. Reading in alot, syncing with offlineimap + imapnotify.
   '';
 
   inputs = {
@@ -21,11 +21,11 @@
         "aarch64-linux"
       ];
 
-      # Module home-manager : installe astropath comme plugin DankMaterialShell.
+      # home-manager module: installs astropath as a DankMaterialShell plugin.
       flake.homeModules.default = import ./nix/hm-module.nix;
 
       perSystem = {pkgs, ...}: let
-        # Launcher d'instance DMS isolée pour tester le worktree (cf. scripts/astropath-dev).
+        # Isolated DMS instance launcher, to test the worktree (see scripts/astropath-dev).
         astropath-dev = pkgs.writeShellApplication {
           name = "astropath-dev";
           runtimeInputs = [pkgs.jq];
@@ -43,29 +43,29 @@
         devShells.default = pkgs.mkShell {
           name = "astropath";
           packages = with pkgs; [
-            # Runtime / cible
+            # Runtime / target
             quickshell
             qt6.qtdeclarative # qmllint, qmlformat, qmltestrunner
             qt6.qtbase
 
-            # Moteur de données
+            # Data engine
             notmuch
 
-            # Outillage projet
+            # Project tooling
             just
             git
             git-cliff
-            jq # scripts/astropath-dev (instance dev isolée)
+            jq # scripts/astropath-dev (isolated dev instance)
 
-            # Portes Nix (cf. .pre-commit-config.yaml)
+            # Nix gates (see .pre-commit-config.yaml)
             alejandra
             deadnix
           ];
 
           shellHook = ''
             echo ""
-            echo "  astropath — mail widget pour Quickshell / DankMaterialShell"
-            echo "  quickshell · notmuch · qmllint/qmlformat prêts."
+            echo "  astropath — mail widget for Quickshell / DankMaterialShell"
+            echo "  quickshell · notmuch · qmllint/qmlformat ready."
             echo "  just ci"
             echo ""
           '';

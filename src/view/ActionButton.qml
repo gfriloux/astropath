@@ -1,6 +1,6 @@
-// Petit bouton d'action (icône) pour la rangée d'actions inline d'un fil.
-// Bâti sur StateLayer (DMS) : ripple + couche d'état hover/press + infobulle, le tout
-// respectant déjà AnimationSpeed.None et le réglage enableRippleEffects.
+// Small action button (icon) for a thread's inline action row.
+// Built on StateLayer (DMS): ripple + hover/press state layer + tooltip, all of which
+// already honor AnimationSpeed.None and the enableRippleEffects setting.
 import QtQuick
 import qs.Common
 import qs.Widgets

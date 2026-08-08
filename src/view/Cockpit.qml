@@ -1,6 +1,5 @@
-// Popout cockpit. Phase 6 : en-tête + rail + barre de recherche + liste + refresh + pied.
-// Actions inline et settings arrivent ensuite.
-// Reçoit le service Notmuch en propriété (data → view, le QML n'appelle pas notmuch direct).
+// Cockpit popout: header + rail + search bar + thread list + refresh + footer.
+// Receives the Notmuch service as a property (data → view; the QML never calls notmuch itself).
 import QtQuick
 import qs.Common
 import qs.Widgets
@@ -12,7 +11,7 @@ PopoutComponent {
 
     property var notmuch: null
     property int viewHeight: 520
-    // Horloge pour rafraîchir l'affichage « il y a N min ».
+    // Clock driving the « il y a N min » display refresh.
     property double now: Date.now()
 
     headerText: "ASTROPATH"
@@ -39,7 +38,7 @@ PopoutComponent {
         width: parent.width
         height: cockpit.viewHeight - cockpit.headerHeight - cockpit.detailsHeight - Theme.spacingXL
 
-        // Rail gauche : recherches sauvegardées (pleine hauteur).
+        // Left rail: saved searches (full height).
         SavedSearchRail {
             id: rail
             anchors.top: parent.top
@@ -50,7 +49,7 @@ PopoutComponent {
             notmuch: cockpit.notmuch
         }
 
-        // Barre du haut (zone principale) : recherche + refresh.
+        // Top bar (main area): search + refresh.
         Item {
             id: topbar
             anchors.top: parent.top
@@ -94,7 +93,7 @@ PopoutComponent {
             }
         }
 
-        // Liste des fils de la requête courante. Navigation clavier j/k/⏎/e/#.
+        // Thread list for the current query. Keyboard navigation j/k/⏎/e/#.
         DankListView {
             id: list
             anchors.top: topbar.bottom
@@ -112,7 +111,7 @@ PopoutComponent {
                 notmuch: cockpit.notmuch
             }
 
-            // La liste prend le focus clavier à l'ouverture du popout.
+            // The list takes keyboard focus when the popout opens.
             Component.onCompleted: list.forceActiveFocus()
 
             Keys.onPressed: event => {
@@ -143,7 +142,7 @@ PopoutComponent {
             }
         }
 
-        // Pied : raccourcis clavier (la navigation effective arrive en Phase 9b).
+        // Footer: keyboard shortcut hints.
         Row {
             id: footer
             anchors.bottom: parent.bottom

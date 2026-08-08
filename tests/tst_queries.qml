@@ -13,7 +13,7 @@ TestCase {
         eq(Q.search("tag:alpha"), ["search", "--format=json", "tag:alpha"]);
     }
 
-    // La requête avec espaces reste UN seul argv (pas de découpage shell).
+    // A query with spaces stays as ONE argv element (no shell splitting).
     function test_searchUnread() {
         eq(Q.searchUnread(), ["search", "--format=json", "tag:inbox and tag:unread"]);
     }

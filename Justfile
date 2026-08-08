@@ -1,67 +1,67 @@
 default:
     @just --list
 
-# Porte de qualité complète : format + lint + test. Seule source de vérité des gates.
+# Full quality gate: format + lint + test. The single source of truth for the gates.
 ci: fmt-check lint test
 
-# Formate le QML en place (qmlformat).
+# Formats the QML in place (qmlformat).
 fmt:
     @find src -name '*.qml' -print0 2>/dev/null | xargs -0 -r qmlformat -i
 
-# Vérifie le format sans modifier : échoue si un fichier n'est pas formaté.
+# Checks formatting without modifying: fails if a file is not formatted.
 fmt-check:
     #!/usr/bin/env bash
     set -euo pipefail
     fail=0
     while IFS= read -r -d '' f; do
         if ! diff -q "$f" <(qmlformat "$f") >/dev/null; then
-            echo "non formaté : $f"; fail=1
+            echo "not formatted: $f"; fail=1
         fi
     done < <(find src -name '*.qml' -print0 2>/dev/null)
     exit $fail
 
-# Lint statique du QML (qmllint). Aucun warning toléré.
+# Static QML lint (qmllint). No warning tolerated.
 lint:
     @find src -name '*.qml' -print0 2>/dev/null | xargs -0 -r qmllint
 
-# Tests golden : qmltestrunner exécute les transforms JS sur fixtures → compare aux goldens.
+# Golden tests: qmltestrunner runs the JS transforms on fixtures → compares to the goldens.
 test:
     #!/usr/bin/env bash
     set -euo pipefail
     if ! find tests -name 'tst_*.qml' 2>/dev/null | grep -q .; then
-        echo "aucun test (tests/tst_*.qml absent)"; exit 0
+        echo "no test (tests/tst_*.qml missing)"; exit 0
     fi
-    # QtTest (TestCase) importe QtQuick.Window : on pointe explicitement le dossier qml de
-    # qtdeclarative (sinon, en CI sans QML2_IMPORT_PATH ambiant, le module est introuvable).
+    # QtTest (TestCase) imports QtQuick.Window: we point explicitly at qtdeclarative's qml
+    # folder (otherwise, in CI without an ambient QML2_IMPORT_PATH, the module is not found).
     qmldir="$(dirname "$(dirname "$(command -v qmltestrunner)")")/lib/qt-6/qml"
     export QML2_IMPORT_PATH="$qmldir${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
     QT_QPA_PLATFORM=offscreen QML_XHR_ALLOW_FILE_READ=1 qmltestrunner -input tests
 
-# Lie le plugin dans le dossier plugins de DMS pour essai (puis l'activer dans DMS).
+# Links the plugin into DMS's plugins folder for testing (then enable it in DMS).
 run:
     #!/usr/bin/env bash
     set -euo pipefail
     dir="${XDG_CONFIG_HOME:-$HOME/.config}/DankMaterialShell/plugins"
     mkdir -p "$dir"
     ln -sfn "$PWD" "$dir/Astropath"
-    echo "Plugin lié → $dir/Astropath"
-    echo "Active 'Astropath' dans DMS (Settings → Plugins). Après chaque modif : just reload."
+    echo "Plugin linked → $dir/Astropath"
+    echo "Enable 'Astropath' in DMS (Settings → Plugins). After each change: just reload."
 
-# Lance une instance DMS *isolée* (config/cache dédiés) chargeant le worktree comme
-# plugin « Astropath (dev) ». Teste la version en cours sans toucher au DMS quotidien.
+# Starts an *isolated* DMS instance (dedicated config/cache) loading the worktree as the
+# « Astropath (dev) » plugin. Tests the in-progress version without touching the daily DMS.
 dev-bar:
     @scripts/astropath-dev "{{justfile_directory()}}"
 
-# Recharge DMS : purge le bytecode QML compilé (sinon l'ancien rendu persiste) puis
-# redémarre le service. Le toggle plugin seul ne suffit pas.
+# Reloads DMS: purges the compiled QML bytecode (otherwise the old rendering sticks) then
+# restarts the service. Toggling the plugin alone is not enough.
 reload:
     rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/quickshell/qmlcache"
     systemctl --user restart dms.service
 
-# Régénère CHANGELOG.md depuis les Conventional Commits (git-cliff).
+# Regenerates CHANGELOG.md from the Conventional Commits (git-cliff).
 changelog:
     git-cliff -o CHANGELOG.md
 
-# Régénère les goldens depuis les fixtures (transform courant). Relire le diff ensuite.
+# Regenerates the goldens from the fixtures (current transform). Review the diff after.
 bless:
     QML_XHR_ALLOW_FILE_READ=1 quickshell -p bless.qml

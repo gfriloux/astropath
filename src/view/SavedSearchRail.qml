@@ -1,6 +1,6 @@
-// Rail gauche : recherches sauvegardées (smart folders). Libellés cliquables ; sélection
-// change la requête courante du service. Défilable (DankListView) : quand les catégories
-// dépassent la hauteur du rail, molette + scrollbar comme la liste de mails.
+// Left rail: saved searches (smart folders). Clickable labels; selecting one changes the
+// service's current query. Scrollable (DankListView): when the categories overflow the
+// rail's height, wheel + scrollbar behave like the mail list.
 import QtQuick
 import qs.Common
 import qs.Widgets
