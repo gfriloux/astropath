@@ -182,28 +182,47 @@ QtObject {
     // Lazy snippets: fetched through notmuch show for the current item only
     // (one process at a time, cached by thread id).
     property var snippets: ({})
-    property string _snippetId: ""
+    property var _snippetQueue: Svc.newSnippetQueue()
+    property string _snippetText: ""
+
     function fetchSnippet(id) {
-        if (!id || root.snippets[id] !== undefined)
-            return;
-        root._snippetId = id;
+        var r = Svc.requestSnippet(root._snippetQueue, id, root.snippets[id] !== undefined);
+        root._snippetQueue = r.queue;
+        if (r.dispatch)
+            _dispatchSnippet(r.dispatch);
+    }
+    function _dispatchSnippet(id) {
+        root._snippetText = "";
         showProc.command = ["notmuch"].concat(Queries.showThread(id));
-        showProc.running = true;
+        showProc.running = true; // safe: only ever called on an exited process
+    }
+    // Both completion signals land here; the collected output is only attributed once the
+    // run is over, under the id that actually asked for it.
+    function _advanceSnippet(ev) {
+        var r = Svc.snippetEvent(root._snippetQueue, ev);
+        root._snippetQueue = r.queue;
+        if (r.completedId) {
+            try {
+                var detail = Model.parseShow(JSON.parse(root._snippetText));
+                var m = Object.assign({}, root.snippets);
+                m[r.completedId] = detail.snippet;
+                root.snippets = m;
+            } catch (e) {
+                console.warn("astropath: show parse failed:", e);
+            }
+        }
+        if (r.dispatch)
+            _dispatchSnippet(r.dispatch);
     }
     property Process showProc: Process {
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
-                try {
-                    var detail = Model.parseShow(JSON.parse(text));
-                    var m = Object.assign({}, root.snippets);
-                    m[root._snippetId] = detail.snippet;
-                    root.snippets = m;
-                } catch (e) {
-                    console.warn("astropath: show parse failed:", e);
-                }
+                root._snippetText = text;
+                root._advanceSnippet("stream");
             }
         }
+        onExited: root._advanceSnippet("exit")
     }
 
     // List: search for the current query.
