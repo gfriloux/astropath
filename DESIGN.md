@@ -83,10 +83,13 @@ installed into `~/.config/DankMaterialShell/plugins/Astropath/`. It inherits DMS
 (Catppuccin Mocha) and Material 3 components.
 
 - `query` → `src/query/queries.js`: notmuch argv builders (search/count/show/tag),
-  pure functions. Executed by `src/view/Notmuch.qml` (quickshell `Process` + `StdioCollector`).
+  pure functions. Executed by `src/view/Notmuch.qml` (quickshell `Process` +
+  `StdioCollector`), which runs the processes but decides nothing: the sync status comes
+  from `src/model/service.js`.
 - `model` → `src/model/threads.js` (`parseSearch`, `parseCount`, `savedSearches` with
   injected definitions = config, `parseShow`) + `format.js` (`relativeTime`) +
-  `overrides.js` (settings algebra: amendment merge/prune, search key derivation). Pure,
+  `overrides.js` (settings algebra: amendment merge/prune, search key derivation) +
+  `service.js` (service decisions: sync status from the observed facts of a run). Pure,
   tested by goldens/unit tests (`tests/`, `just test` / `just bless`).
 - `view` → `src/view/`: `AstropathWidget` (bar + badge), `Cockpit` (popout: sync header,
   saved-search rail, live search, list, inline actions, keyboard navigation),

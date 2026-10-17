@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import "../query/queries.js" as Queries
 import "../model/threads.js" as Model
+import "../model/service.js" as Svc
 
 QtObject {
     id: root
@@ -59,10 +60,18 @@ QtObject {
 
     // Sets command imperatively (no lazy binding) then starts: guarantees the query that
     // runs is the current one, even right after a change.
+    property var _searchRun: Svc.newSearchRun()
     function runSearch() {
-        root.status = "querying";
+        root._searchRun = Svc.newSearchRun();
+        root.status = Svc.decideSearchStatus(root._searchRun);
         searchProc.command = ["notmuch"].concat(Queries.search(root.currentQuery));
         searchProc.running = true;
+    }
+    // Records one observed fact about the running search, then recomputes the status from
+    // all the facts gathered so far (the three handlers fire in no guaranteed order).
+    function _noteSearch(fact) {
+        root._searchRun = Object.assign({}, root._searchRun, fact);
+        root.status = Svc.decideSearchStatus(root._searchRun);
     }
 
     function refresh() {
@@ -205,28 +214,31 @@ QtObject {
             onStreamFinished: {
                 try {
                     root.threads = Model.parseSearch(JSON.parse(text));
-                    root.status = "idle";
                     root.lastSyncAt = Date.now();
+                    root._noteSearch({
+                        "stdoutDone": true,
+                        "parseOk": true
+                    });
                 } catch (e) {
-                    root.status = "error";
+                    root._noteSearch({
+                        "stdoutDone": true
+                    });
                     console.warn("astropath: search parse failed:", e);
                 }
             }
         }
 
+        // notmuch warns here on runs that are otherwise fine (duplicate Message-Id,
+        // Xapian notices): we log, we do not judge. The exit code judges.
         stderr: StdioCollector {
-            onStreamFinished: {
-                if (text.trim()) {
-                    root.status = "error";
-                    console.warn("astropath notmuch:", text.trim());
-                }
-            }
+            onStreamFinished: if (text.trim())
+                console.warn("astropath notmuch:", text.trim())
         }
 
-        onExited: code => {
-            if (code !== 0)
-                root.status = "error";
-        }
+        onExited: code => root._noteSearch({
+                "exited": true,
+                "exitCode": code
+            })
     }
 
     // Tag mutation: notmuch tag … -- thread:id.
