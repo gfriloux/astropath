@@ -334,13 +334,38 @@ ships no version.
 
 ## Manual validation
 
-_Filled in at Task 5. Baseline from Task 1, Step 1 goes here._
+**Run on 2026-10-17**, on branch `docs/superpowers-working-norm` cut from `main` at
+`1171f1d`. Every box below was exercised; none was skipped.
 
-- [ ] `nix develop --command just ci` green before starting (baseline, date + result)
-- [ ] `git check-ignore -v .superpowers/sdd/x` from a fresh worktree matches the root
-      `.gitignore`
-- [ ] `nix develop --command just ci` green at closing
-- [ ] `git diff --stat main...HEAD` touches only docs, `README.md`, `CLAUDE.md`,
-      `PROCEDURE_PLANS.md`, `.gitignore`
-- [ ] `MEMORY.md` index fully resolves; no memory teaches the old norm
-- [ ] No untracked `docs/superpowers/` left in the main working tree before the merge
+- [x] **Baseline.** `nix develop --command just ci` on `main` (`1171f1d`) →
+      `57 passed, 0 failed, 0 skipped`.
+- [x] **The ignore rule holds where it leaked.** Probed *both* paths, before and after:
+      `git check-ignore -v .superpowers/other/x` → exit 1, **no match** before the fix;
+      after it, both `.superpowers/other/x` and `.superpowers/sdd/x` report
+      `.gitignore:18 .superpowers/`. The single probe this plan originally specified
+      (`sdd/x`) would have passed before the fix, against the tooling-created
+      `.superpowers/sdd/.gitignore` — see the Task 1 ruling in the ledger.
+- [x] **Gates at closing.** `nix develop --command just ci` in the worktree →
+      `57 passed, 0 failed, 0 skipped`. Re-run independently by the branch reviewer,
+      same result.
+- [x] **Diff scope.** `git diff --stat main...HEAD` touches only `.gitignore`,
+      `CLAUDE.md`, `PROCEDURE_PLANS.md`, `README.md` and `docs/superpowers/`. No
+      `src/`, `tests/`, `nix/` or `scripts/` path, so no golden can have moved.
+- [x] **Memories.** All 8 `MEMORY.md` index targets resolve to existing files; the 4
+      distinct `[[wikilink]]` targets all exist. `ask-before-commit.md` is gone, and no
+      memory — body *or* index hook — still teaches per-task approval or an open merge
+      question.
+- [x] **No untracked copy in the main working tree.** The spec and plan were moved, not
+      copied, into the worktree; `/home/kuri/Apps/github/gfriloux/astropath/docs` does
+      not exist, so the `--no-ff` merge cannot abort on untracked files.
+- [x] **Signatures.** The three implementation commits are `%G?` = `G`, authored
+      `guillaume@friloux.me`, from a single announced burst on one passphrase.
+
+**Independent review.** Whole-branch review on the most capable model: no Critical, two
+Important, six Minor. Fixed in one pass: the stale `MEMORY.md` merge hook, this
+validation section, `PROCEDURE_PLANS.md` §4's over-broad "never duplicated" claim,
+`README.md` reading as an invitation for any contributor to merge `main`, and
+`CLAUDE.md` no longer telling the reader to *read* `PROCEDURE_PLANS.md`. Deferred as
+minors: §1's TDD table row not pointing at the §6 derogation, and the two items the
+rewrite dropped from the old file (the `_v2`/`_v3` plan-naming rule, moot under dated
+filenames; the positive "we automate" list, now implicit in §5–§6).
