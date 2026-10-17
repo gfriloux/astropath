@@ -34,9 +34,9 @@ TestCase {
         compare(defs[0].query, "tag:boulot");
     }
 
-    // A custom search keyed like a discovered tag must not yield two rail entries
-    // sharing one count slot: the first occurrence wins.
-    function test_buildDefinitions_dedupesByKey() {
+    // Two definitions must never share a key (they would share one count slot), but
+    // neither may vanish: the later one is renamed, not dropped.
+    function test_buildDefinitions_uniquifiesCollidingKeys() {
         var defs = Model.buildDefinitions(["boulot"], {
             "custom": [{
                     "key": "boulot",
@@ -45,8 +45,37 @@ TestCase {
                     "color": "#f38ba8"
                 }]
         });
-        compare(defs.length, 1);
-        compare(defs[0].query, "tag:boulot");
+        compare(defs.length, 2);
+        compare(defs[0].key, "boulot");
+        compare(defs[1].key, "boulot-2");
+        compare(defs[1].query, "tag:boulot and tag:unread");
+    }
+
+    // A composed search keyed like a pinned universal (inbox/flagged/spam) is the same
+    // collision: the universal keeps its key, the custom keeps its entry.
+    function test_buildDefinitions_uniquifiesAgainstUniversals() {
+        var defs = Model.buildDefinitions([], {
+            "universals": [{
+                    "key": "inbox",
+                    "label": "Inbox",
+                    "query": "tag:inbox",
+                    "color": "#89b4fa"
+                }],
+            "custom": [{
+                    "key": "inbox",
+                    "label": "Inbox",
+                    "query": "tag:inbox and tag:unread",
+                    "color": "#f38ba8"
+                }]
+        });
+        compare(defs.length, 2);
+        compare(defs[1].key, "inbox-2");
+    }
+
+    // Object keys inherited from Object.prototype are not "already seen".
+    function test_buildDefinitions_handlesPrototypeNamedTags() {
+        var defs = Model.buildDefinitions(["constructor", "boulot"], {});
+        compare(defs.length, 2);
     }
 
     function test_relativeTime() {

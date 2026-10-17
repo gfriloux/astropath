@@ -32,8 +32,11 @@ should change.
 
 - [ ] Normal use for a few polling cycles (20 s): the cockpit header never sticks on
       « erreur de synchro » while the thread list is correctly refreshing.
-- [ ] Force a real failure — rename the notmuch binary out of `PATH`, or point the config
-      at a broken database — and confirm the header **does** show the error state.
+- [ ] Force a real failure — point `NOTMUCH_CONFIG` at a config whose database path does
+      not exist, so `notmuch search` runs and **exits non-zero** — and confirm the header
+      does show the error state. (Do *not* use "rename the binary out of `PATH`" for this:
+      a process that fails to start emits no exit code, so the status stays on
+      « synchro… » instead. Pre-existing, unrelated to this version.)
 - [ ] Back to normal: the next poll clears the error.
 
 ## Lazy snippets (Task 4, #7)
@@ -47,6 +50,10 @@ should change.
 - [ ] A thread whose `notmuch show` fails (large/corrupt thread, if one is reachable)
       leaves the rest of the list working — no stuck selection, no snippet from a
       neighbor.
+- [ ] Recovery: make `notmuch` unreachable from the DMS environment, navigate a few rows
+      (no snippet appears), restore it, then navigate again — snippets come back without
+      restarting the shell. Before v0.8.0's fix pass this wedged the queue for the rest of
+      the session.
 
 ## General
 

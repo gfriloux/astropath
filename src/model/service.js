@@ -18,6 +18,16 @@ function newSearchRun() {
     };
 }
 
+// The fact a finished stdout stream contributes. Built here rather than spelled out at
+// the call site so the failure case cannot omit parseOk: facts are merged onto the run,
+// and an omitted field would leave a previous run's success standing.
+function searchStdoutFact(parseOk) {
+    return {
+        stdoutDone: true,
+        parseOk: !!parseOk
+    };
+}
+
 // The exit code is the only authority on failure. stderr is deliberately not an input:
 // notmuch writes benign warnings there on perfectly successful runs.
 function decideSearchStatus(run) {
@@ -46,21 +56,28 @@ function newSnippetQueue() {
 }
 
 // → { queue, dispatch }: dispatch is the id to actually run now, "" if nothing starts.
-function requestSnippet(queue, id, isCached) {
-    if (!id || isCached || id === queue.inflight)
+// inflightAlive tells us whether the process we believe is running actually is: one that
+// died without completing (notmuch failing to start emits no completion signal) would
+// otherwise hold the queue forever, killing snippets for the rest of the session. The old
+// code re-armed the process on every request and healed by itself; this keeps that.
+function requestSnippet(queue, id, isCached, inflightAlive) {
+    var q = (queue.inflight && !inflightAlive) ? newSnippetQueue() : queue;
+    if (!id || isCached || id === q.inflight)
         return {
-            queue: queue,
+            queue: q,
             dispatch: ""
         };
-    if (!queue.inflight)
+    if (!q.inflight)
         return {
-            queue: Object.assign({}, queue, {
-                inflight: id
+            queue: Object.assign({}, q, {
+                inflight: id,
+                textReady: false,
+                exited: false
             }),
             dispatch: id
         };
     return {
-        queue: Object.assign({}, queue, {
+        queue: Object.assign({}, q, {
             pending: id
         }),
         dispatch: ""

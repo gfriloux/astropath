@@ -84,8 +84,9 @@ installed into `~/.config/DankMaterialShell/plugins/Astropath/`. It inherits DMS
 
 - `query` → `src/query/queries.js`: notmuch argv builders (search/count/show/tag),
   pure functions. Executed by `src/view/Notmuch.qml` (quickshell `Process` +
-  `StdioCollector`), which runs the processes but decides nothing: the sync status and the
-  snippet request ordering come from `src/model/service.js`.
+  `StdioCollector`). The search's sync status and the snippet request ordering are decided
+  in `src/model/service.js`, not in the QML; the tag-mutation process still flags its own
+  failures directly.
 - `model` → `src/model/threads.js` (`parseSearch`, `parseCount`, `savedSearches` with
   injected definitions = config, `parseShow`) + `format.js` (`relativeTime`) +
   `overrides.js` (settings algebra: amendment merge/prune, search key derivation) +

@@ -56,8 +56,13 @@ function deriveKey(label) {
 // would display the other's count. The typed label is never touched: only this internal
 // key gets the -2/-3 suffix.
 function uniqueKey(label, takenKeys) {
+    return uniquify(deriveKey(label), takenKeys);
+}
+
+// The suffix rule itself, on an already-derived key. Shared with buildDefinitions, which
+// applies it as a last line of defence on keys it did not mint.
+function uniquify(base, takenKeys) {
     var taken = takenKeys || [];
-    var base = deriveKey(label);
     var candidate = base;
     var n = 2;
     while (taken.indexOf(candidate) !== -1) {

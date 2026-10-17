@@ -186,7 +186,9 @@ QtObject {
     property string _snippetText: ""
 
     function fetchSnippet(id) {
-        var r = Svc.requestSnippet(root._snippetQueue, id, root.snippets[id] !== undefined);
+        // showProc.running is how we tell a run that is still coming from one that died
+        // without ever completing (notmuch failing to start emits no completion signal).
+        var r = Svc.requestSnippet(root._snippetQueue, id, root.snippets[id] !== undefined, showProc.running);
         root._snippetQueue = r.queue;
         if (r.dispatch)
             _dispatchSnippet(r.dispatch);
@@ -234,14 +236,9 @@ QtObject {
                 try {
                     root.threads = Model.parseSearch(JSON.parse(text));
                     root.lastSyncAt = Date.now();
-                    root._noteSearch({
-                        "stdoutDone": true,
-                        "parseOk": true
-                    });
+                    root._noteSearch(Svc.searchStdoutFact(true));
                 } catch (e) {
-                    root._noteSearch({
-                        "stdoutDone": true
-                    });
+                    root._noteSearch(Svc.searchStdoutFact(false));
                     console.warn("astropath: search parse failed:", e);
                 }
             }

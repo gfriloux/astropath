@@ -265,8 +265,10 @@ Column {
                 if (l === "" || q === "")
                     return;
                 // Keys already in play: every discovered tag (including the ones hidden
-                // by an override — hiding is reversible) plus the existing customs.
-                const taken = editor.discoveredTags.concat(editor.customs.map(function (c) {
+                // by an override — hiding is reversible), the existing customs, and the
+                // state tags — the pinned universals (inbox/flagged/spam) take their keys
+                // from that list and never show up in discoveredTags.
+                const taken = editor.discoveredTags.concat(Model.DEFAULT_TAG_BLOCKLIST).concat(editor.customs.map(function (c) {
                     return c.key;
                 }));
                 editor.addCustom({

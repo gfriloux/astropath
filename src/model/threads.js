@@ -1,4 +1,5 @@
 .pragma library
+.import "overrides.js" as Ov
 
 // Thread model transforms. Pure functions: same notmuch input → same output.
 // Input = already-parsed notmuch JSON; output = astropath's domain model.
@@ -86,11 +87,13 @@ function colorForTag(tag) {
 function buildDefinitions(tags, cfg) {
     cfg = cfg || {};
     var universals = cfg.universals || [];
-    var blockset = {};
+    // Plain objects would inherit Object.prototype, so a tag named "constructor" or
+    // "toString" would read as blocked/overridden. These maps have no prototype.
+    var blockset = Object.create(null);
     (cfg.blocklist || DEFAULT_TAG_BLOCKLIST).forEach(function (t) {
         blockset[t] = true;
     });
-    var overrides = {};
+    var overrides = Object.create(null);
     (cfg.overrides || []).forEach(function (o) {
         if (o && o.tag)
             overrides[o.tag] = o;
@@ -117,20 +120,22 @@ function buildDefinitions(tags, cfg) {
         };
     });
 
-    return dedupeByKey(universals.concat(discovered).concat(custom));
+    return uniquifyKeys(universals.concat(discovered).concat(custom));
 }
 
-// Defensive: uniqueness is enforced where keys are born (the settings' composed-search
-// form, see overrides.js uniqueKey). Counts are accumulated per key, so two definitions
-// sharing one would silently display the same number — keeping the first occurrence makes
-// that unrepresentable even if a future caller feeds us colliding keys.
-function dedupeByKey(definitions) {
-    var seen = {};
-    return definitions.filter(function (d) {
-        if (seen[d.key])
-            return false;
-        seen[d.key] = true;
-        return true;
+// Last line of defence on key uniqueness. Uniqueness is enforced where keys are born (the
+// settings' composed-search form, see overrides.js uniqueKey), but counts are accumulated
+// per key: two definitions sharing one would silently display the same number. Renaming
+// the later one — rather than dropping it — makes that unrepresentable without ever
+// making a user's saved search disappear from the rail.
+function uniquifyKeys(definitions) {
+    var taken = [];
+    return definitions.map(function (d) {
+        var key = Ov.uniquify(d.key, taken);
+        taken.push(key);
+        return key === d.key ? d : Object.assign({}, d, {
+            key: key
+        });
     });
 }
 
