@@ -73,8 +73,9 @@ defect, not a follow-up.
 
 ## 4. Quality gates
 
-**One single definition: the `Justfile`.** pre-commit and CI both call it, and it is
-never duplicated into another document.
+**One single definition: the `Justfile`.** pre-commit and CI both call it, and no other
+document **redefines** the gates — a list elsewhere (here, `CLAUDE.md`, `README.md`) is
+a convenience copy of the `Justfile`, never a second source.
 
 ```bash
 just fmt-check   # qmlformat — no unformatted file

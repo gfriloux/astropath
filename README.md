@@ -83,10 +83,11 @@ reading client and smart folders in its settings.
 ## Contributing
 
 No code without an approved plan. Read [`DESIGN.md`](./DESIGN.md) before any change —
-it is authoritative. The process is the **superpowers** skill set (design → plan →
-execute → review → integrate); [`PROCEDURE_PLANS.md`](./PROCEDURE_PLANS.md) holds this
-project's specifics. Work on a dedicated branch with atomic commits (Conventional
-Commits), signed, and integrate with a `--no-ff` merge into `main`.
+it is authoritative. The process is **superpowers**, an agent skill set installed in
+Claude Code (design → plan → execute → review → integrate);
+[`PROCEDURE_PLANS.md`](./PROCEDURE_PLANS.md) holds this project's specifics. Work on a
+dedicated branch with atomic commits (Conventional Commits), signed; the maintainer —
+or its agent — integrates with a `--no-ff` merge into `main`.
 
 ## Release
 

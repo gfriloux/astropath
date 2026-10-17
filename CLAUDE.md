@@ -4,8 +4,9 @@ Guidance for Claude Code (claude.ai/code) in this repository.
 
 > **Before any work on the code, read [`DESIGN.md`](./DESIGN.md) — it outranks every
 > skill.** The process is **superpowers**: brainstorm → design → plan → execute →
-> review → integrate. [`PROCEDURE_PLANS.md`](./PROCEDURE_PLANS.md) holds this project's
-> specifics (gates, goldens, toolchain, git identity) and nothing else.
+> review → integrate. **Then read [`PROCEDURE_PLANS.md`](./PROCEDURE_PLANS.md)** — it
+> holds this project's specifics (gates, goldens, toolchain, git identity), and nothing
+> else.
 > **No code without an approved plan.**
 
 ## What astropath is
