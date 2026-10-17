@@ -8,6 +8,7 @@ import qs.Common
 import qs.Widgets
 import "../query/queries.js" as Queries
 import "../model/threads.js" as Model
+import "../model/overrides.js" as Ov
 
 Column {
     id: editor
@@ -43,35 +44,11 @@ Column {
         customs = s.loadValue("customSearches", []);
     }
     function overrideFor(tag) {
-        for (var i = 0; i < overrides.length; i++)
-            if (overrides[i].tag === tag)
-                return overrides[i];
-        return null;
+        return Ov.overrideFor(overrides, tag);
     }
-    // Merges an amendment onto a tag. Empty fields are cleaned up; an entry reduced to
-    // { tag } (no amendment left) is dropped so it does not clutter the config.
+    // Merge/prune lives in overrides.js (pure, unit-tested); here we only persist.
     function patchOverride(tag, patch) {
-        let a = overrides.slice();
-        let idx = -1;
-        for (var i = 0; i < a.length; i++)
-            if (a[i].tag === tag) {
-                idx = i;
-                break;
-            }
-        let merged = Object.assign({}, idx >= 0 ? a[idx] : {
-            "tag": tag
-        }, patch);
-        if (!merged.label)
-            delete merged.label;
-        if (!merged.color)
-            delete merged.color;
-        if (!merged.hidden)
-            delete merged.hidden;
-        let bare = Object.keys(merged).length === 1; // only { tag } is left
-        if (idx >= 0)
-            bare ? a.splice(idx, 1) : a[idx] = merged;
-        else if (!bare)
-            a.push(merged);
+        const a = Ov.patchOverride(overrides, tag, patch);
         overrides = a;
         const s = findSettings();
         if (s)
@@ -287,8 +264,15 @@ Column {
                 const q = queryField.text.trim();
                 if (l === "" || q === "")
                     return;
+                // Keys already in play: every discovered tag (including the ones hidden
+                // by an override — hiding is reversible), the existing customs, and the
+                // state tags — the pinned universals (inbox/flagged/spam) take their keys
+                // from that list and never show up in discoveredTags.
+                const taken = editor.discoveredTags.concat(Model.DEFAULT_TAG_BLOCKLIST).concat(editor.customs.map(function (c) {
+                    return c.key;
+                }));
                 editor.addCustom({
-                    "key": l.toLowerCase().replace(/\s+/g, "-"),
+                    "key": Ov.uniqueKey(l, taken),
                     "label": l,
                     "query": q,
                     "color": editor.palette[editor.customs.length % editor.palette.length]

@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import "../query/queries.js" as Queries
 import "../model/threads.js" as Model
+import "../model/service.js" as Svc
 
 QtObject {
     id: root
@@ -59,10 +60,18 @@ QtObject {
 
     // Sets command imperatively (no lazy binding) then starts: guarantees the query that
     // runs is the current one, even right after a change.
+    property var _searchRun: Svc.newSearchRun()
     function runSearch() {
-        root.status = "querying";
+        root._searchRun = Svc.newSearchRun();
+        root.status = Svc.decideSearchStatus(root._searchRun);
         searchProc.command = ["notmuch"].concat(Queries.search(root.currentQuery));
         searchProc.running = true;
+    }
+    // Records one observed fact about the running search, then recomputes the status from
+    // all the facts gathered so far (the three handlers fire in no guaranteed order).
+    function _noteSearch(fact) {
+        root._searchRun = Object.assign({}, root._searchRun, fact);
+        root.status = Svc.decideSearchStatus(root._searchRun);
     }
 
     function refresh() {
@@ -173,28 +182,49 @@ QtObject {
     // Lazy snippets: fetched through notmuch show for the current item only
     // (one process at a time, cached by thread id).
     property var snippets: ({})
-    property string _snippetId: ""
+    property var _snippetQueue: Svc.newSnippetQueue()
+    property string _snippetText: ""
+
     function fetchSnippet(id) {
-        if (!id || root.snippets[id] !== undefined)
-            return;
-        root._snippetId = id;
+        // showProc.running is how we tell a run that is still coming from one that died
+        // without ever completing (notmuch failing to start emits no completion signal).
+        var r = Svc.requestSnippet(root._snippetQueue, id, root.snippets[id] !== undefined, showProc.running);
+        root._snippetQueue = r.queue;
+        if (r.dispatch)
+            _dispatchSnippet(r.dispatch);
+    }
+    function _dispatchSnippet(id) {
+        root._snippetText = "";
         showProc.command = ["notmuch"].concat(Queries.showThread(id));
-        showProc.running = true;
+        showProc.running = true; // safe: only ever called on an exited process
+    }
+    // Both completion signals land here; the collected output is only attributed once the
+    // run is over, under the id that actually asked for it.
+    function _advanceSnippet(ev) {
+        var r = Svc.snippetEvent(root._snippetQueue, ev);
+        root._snippetQueue = r.queue;
+        if (r.completedId) {
+            try {
+                var detail = Model.parseShow(JSON.parse(root._snippetText));
+                var m = Object.assign({}, root.snippets);
+                m[r.completedId] = detail.snippet;
+                root.snippets = m;
+            } catch (e) {
+                console.warn("astropath: show parse failed:", e);
+            }
+        }
+        if (r.dispatch)
+            _dispatchSnippet(r.dispatch);
     }
     property Process showProc: Process {
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
-                try {
-                    var detail = Model.parseShow(JSON.parse(text));
-                    var m = Object.assign({}, root.snippets);
-                    m[root._snippetId] = detail.snippet;
-                    root.snippets = m;
-                } catch (e) {
-                    console.warn("astropath: show parse failed:", e);
-                }
+                root._snippetText = text;
+                root._advanceSnippet("stream");
             }
         }
+        onExited: root._advanceSnippet("exit")
     }
 
     // List: search for the current query.
@@ -205,28 +235,26 @@ QtObject {
             onStreamFinished: {
                 try {
                     root.threads = Model.parseSearch(JSON.parse(text));
-                    root.status = "idle";
                     root.lastSyncAt = Date.now();
+                    root._noteSearch(Svc.searchStdoutFact(true));
                 } catch (e) {
-                    root.status = "error";
+                    root._noteSearch(Svc.searchStdoutFact(false));
                     console.warn("astropath: search parse failed:", e);
                 }
             }
         }
 
+        // notmuch warns here on runs that are otherwise fine (duplicate Message-Id,
+        // Xapian notices): we log, we do not judge. The exit code judges.
         stderr: StdioCollector {
-            onStreamFinished: {
-                if (text.trim()) {
-                    root.status = "error";
-                    console.warn("astropath notmuch:", text.trim());
-                }
-            }
+            onStreamFinished: if (text.trim())
+                console.warn("astropath notmuch:", text.trim())
         }
 
-        onExited: code => {
-            if (code !== 0)
-                root.status = "error";
-        }
+        onExited: code => root._noteSearch({
+                "exited": true,
+                "exitCode": code
+            })
     }
 
     // Tag mutation: notmuch tag … -- thread:id.
