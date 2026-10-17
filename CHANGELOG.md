@@ -3,11 +3,32 @@
 All notable changes to astropath are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-10-17
+
+### Bug Fixes
+
+- **model**: keep saved-search keys unique so counts cannot collide ([`c379571`](https://github.com/gfriloux/astropath/commit/c379571f96b05d5878fb37cfc5b94180144520f2))
+- **view**: decide the search status from the exit code only ([`ac201ea`](https://github.com/gfriloux/astropath/commit/ac201ea3d80647c25bc84c935bd47aae18653665))
+- **view**: serialise lazy snippet fetches so results cannot be misattributed ([`912a799`](https://github.com/gfriloux/astropath/commit/912a799ac7c89a1eebd521eb034ef8a357203776))
+- **model**: close the three races found by the v0.8.0 branch review ([`1cb8827`](https://github.com/gfriloux/astropath/commit/1cb882730978345f5bbf51146239e0829aab3a0e))
+
+### Documentation
+
+- translate project documentation to English ([`338eb33`](https://github.com/gfriloux/astropath/commit/338eb33a4df0c628425aa7628e92cd5c009a84e4))
+- record the v0.8.0 manual validation ([`05ca1e8`](https://github.com/gfriloux/astropath/commit/05ca1e82bbc567fce8d7943f7e7af34fc9e6b7fe))
+
+### Refactoring
+
+- **model**: extract the category override algebra into a pure module ([`295f803`](https://github.com/gfriloux/astropath/commit/295f803fd3d020e27b56ed068cf820cab34b8fae))
 ## [0.7.1] — 2026-07-19
 
 ### Bug Fixes
 
 - **view**: rendre le rail des catégories défilable ([`875e0bf`](https://github.com/gfriloux/astropath/commit/875e0bf5b901cf199d2582397ce51df91f9fd3c2))
+
+### Documentation
+
+- changelog v0.7.1 ([`e8e87e6`](https://github.com/gfriloux/astropath/commit/e8e87e6aa191072d5e9de1d483dd47999c88f642))
 ## [0.7.0] — 2026-06-27
 
 ### Documentation
