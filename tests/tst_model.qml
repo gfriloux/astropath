@@ -34,6 +34,21 @@ TestCase {
         compare(defs[0].query, "tag:boulot");
     }
 
+    // A custom search keyed like a discovered tag must not yield two rail entries
+    // sharing one count slot: the first occurrence wins.
+    function test_buildDefinitions_dedupesByKey() {
+        var defs = Model.buildDefinitions(["boulot"], {
+            "custom": [{
+                    "key": "boulot",
+                    "label": "Boulot urgent",
+                    "query": "tag:boulot and tag:unread",
+                    "color": "#f38ba8"
+                }]
+        });
+        compare(defs.length, 1);
+        compare(defs[0].query, "tag:boulot");
+    }
+
     function test_relativeTime() {
         var now = 1000000000000;
         compare(Format.relativeTime(0, now), "");

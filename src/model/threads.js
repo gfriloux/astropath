@@ -117,7 +117,21 @@ function buildDefinitions(tags, cfg) {
         };
     });
 
-    return universals.concat(discovered).concat(custom);
+    return dedupeByKey(universals.concat(discovered).concat(custom));
+}
+
+// Defensive: uniqueness is enforced where keys are born (the settings' composed-search
+// form, see overrides.js uniqueKey). Counts are accumulated per key, so two definitions
+// sharing one would silently display the same number — keeping the first occurrence makes
+// that unrepresentable even if a future caller feeds us colliding keys.
+function dedupeByKey(definitions) {
+    var seen = {};
+    return definitions.filter(function (d) {
+        if (seen[d.key])
+            return false;
+        seen[d.key] = true;
+        return true;
+    });
 }
 
 // Enriches smart folders with their counter. The definitions (label/query/color) are

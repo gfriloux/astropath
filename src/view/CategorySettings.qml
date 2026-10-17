@@ -264,8 +264,13 @@ Column {
                 const q = queryField.text.trim();
                 if (l === "" || q === "")
                     return;
+                // Keys already in play: every discovered tag (including the ones hidden
+                // by an override — hiding is reversible) plus the existing customs.
+                const taken = editor.discoveredTags.concat(editor.customs.map(function (c) {
+                    return c.key;
+                }));
                 editor.addCustom({
-                    "key": l.toLowerCase().replace(/\s+/g, "-"),
+                    "key": Ov.uniqueKey(l, taken),
                     "label": l,
                     "query": q,
                     "color": editor.palette[editor.customs.length % editor.palette.length]

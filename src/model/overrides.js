@@ -50,3 +50,19 @@ function patchOverride(overrides, tag, patch) {
 function deriveKey(label) {
     return String(label || "").toLowerCase().replace(/\s+/g, "-");
 }
+
+// Same, made unique against the keys already in play (discovered tags + existing composed
+// searches). Two definitions sharing a key would share one counter slot, so one of them
+// would display the other's count. The typed label is never touched: only this internal
+// key gets the -2/-3 suffix.
+function uniqueKey(label, takenKeys) {
+    var taken = takenKeys || [];
+    var base = deriveKey(label);
+    var candidate = base;
+    var n = 2;
+    while (taken.indexOf(candidate) !== -1) {
+        candidate = base + "-" + n;
+        n++;
+    }
+    return candidate;
+}

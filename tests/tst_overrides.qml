@@ -88,4 +88,17 @@ TestCase {
         compare(Ov.deriveKey("  Urgent   client "), "-urgent-client-");
         compare(Ov.deriveKey("À trier"), "à-trier");
     }
+
+    function test_uniqueKey_freeKeyIsUnchanged() {
+        compare(Ov.uniqueKey("Boulot", ["perso", "factures"]), "boulot");
+        compare(Ov.uniqueKey("Boulot", []), "boulot");
+    }
+
+    function test_uniqueKey_collidingKeyIsSuffixed() {
+        compare(Ov.uniqueKey("Boulot", ["boulot"]), "boulot-2");
+    }
+
+    function test_uniqueKey_repeatedCollisionWalksUp() {
+        compare(Ov.uniqueKey("Boulot", ["boulot", "boulot-2"]), "boulot-3");
+    }
 }
