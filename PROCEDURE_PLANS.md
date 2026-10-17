@@ -17,12 +17,14 @@
 | Turn it into tasks | `superpowers:writing-plans` | `docs/superpowers/plans/YYYY-MM-DD-<feature>.md` |
 | Isolate the workspace | `superpowers:using-git-worktrees` | a worktree on a dedicated branch |
 | Implement | `superpowers:executing-plans` | atomic commits + a ledger |
-| Prove each change | `superpowers:test-driven-development` | a test watched failing, then passing |
+| Prove each change | `superpowers:test-driven-development` | a test watched failing, then passing (§6 narrows this for `view`) |
 | Independent review | `superpowers:requesting-code-review` | findings, re-graded by effect |
 | Integrate | `superpowers:finishing-a-development-branch` | a `--no-ff` merge into `main` |
 
 Both document directories are committed. Nothing new lands under `.claude/plans/`
-(see §8).
+(see §8). An obsolete spec or plan is **deleted**, never kept alongside its replacement:
+the dated filenames make a stale document look like history rather than the duplicate
+it is.
 
 **Execution method: native by default.** `superpowers:writing-plans` offers
 subagent-driven or native execution; this repository defaults to **native** because the
@@ -126,11 +128,15 @@ tests/golden/<case>.json       ← expected domain model
 This exception is narrow and decided (2026-10-17). It is not a licence to skip tests
 anywhere a test could have been written.
 
-## 7. What is not automatable
+## 7. What is automated, and what is not
 
-Pixel-perfect QML rendering, actually opening the external client, real
-offlineimap/imapnotify syncing, launching Quickshell on Wayland, live settings, real
-notmuch timing.
+**Automated**: notmuch parsing → model, tag/counter/state logic, query construction.
+That is the whole `query` + `model` layer, and §5 is how it is tested. A change there
+with no fixture and no golden is incomplete, not merely untested.
+
+**Not automated**: pixel-perfect QML rendering, actually opening the external client,
+real offlineimap/imapnotify syncing, launching Quickshell on Wayland, live settings,
+real notmuch timing.
 
 These become **verification steps inside the plan**, attached to the task they validate,
 in superpowers' step style: the command to run, the result that means it passed, a
