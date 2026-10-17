@@ -77,13 +77,17 @@ reading client and smart folders in its settings.
   (regenerates). Synthetic test data.
 - `nix/hm-module.nix` — home-manager module (installs the plugin, daily instance).
 - `scripts/astropath-dev` — starts an isolated DMS instance on the worktree (`just dev-bar`).
+- `docs/superpowers/` — `specs/` (designs) and `plans/` (plans, verification included).
+  `.claude/plans/` is the frozen archive of the v0.1.0 … v0.8.0 plans.
 
 ## Contributing
 
-No code without an approved plan. Read [`DESIGN.md`](./DESIGN.md) then
-[`PROCEDURE_PLANS.md`](./PROCEDURE_PLANS.md) before any change. Git policy is
-**hybrid**: work on a dedicated branch, atomic commits (Conventional Commits),
-merge/push/tag reserved for the maintainer.
+No code without an approved plan. Read [`DESIGN.md`](./DESIGN.md) before any change —
+it is authoritative. The process is **superpowers**, an agent skill set installed in
+Claude Code (design → plan → execute → review → integrate);
+[`PROCEDURE_PLANS.md`](./PROCEDURE_PLANS.md) holds this project's specifics. Work on a
+dedicated branch with atomic commits (Conventional Commits), signed; the maintainer —
+or its agent — integrates with a `--no-ff` merge into `main`.
 
 ## Release
 
