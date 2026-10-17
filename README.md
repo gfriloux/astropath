@@ -70,7 +70,8 @@ reading client and smart folders in its settings.
 - `plugin.json` — DMS plugin manifest (widget type, permissions, icon).
 - `src/query/` — notmuch command construction (argv), pure JS.
 - `src/model/` — `notmuch` JSON → model transforms (`parseSearch`/`parseCount`/
-  `savedSearches`/`parseShow`) + `format.js`, pure JS tested by goldens.
+  `savedSearches`/`parseShow`) + `format.js` + `overrides.js` (settings algebra), pure JS
+  tested by goldens and unit tests.
 - `src/view/` — QML plugin: bar widget, cockpit (popout), settings. Theme inherited from DMS.
 - `tests/` — notmuch fixtures + goldens. `just test` (qmltestrunner), `just bless`
   (regenerates). Synthetic test data.

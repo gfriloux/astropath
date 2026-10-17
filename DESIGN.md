@@ -85,8 +85,9 @@ installed into `~/.config/DankMaterialShell/plugins/Astropath/`. It inherits DMS
 - `query` → `src/query/queries.js`: notmuch argv builders (search/count/show/tag),
   pure functions. Executed by `src/view/Notmuch.qml` (quickshell `Process` + `StdioCollector`).
 - `model` → `src/model/threads.js` (`parseSearch`, `parseCount`, `savedSearches` with
-  injected definitions = config, `parseShow`) + `format.js` (`relativeTime`). Pure, tested
-  by goldens/unit tests (`tests/`, `just test` / `just bless`).
+  injected definitions = config, `parseShow`) + `format.js` (`relativeTime`) +
+  `overrides.js` (settings algebra: amendment merge/prune, search key derivation). Pure,
+  tested by goldens/unit tests (`tests/`, `just test` / `just bless`).
 - `view` → `src/view/`: `AstropathWidget` (bar + badge), `Cockpit` (popout: sync header,
   saved-search rail, live search, list, inline actions, keyboard navigation),
   `Settings` (config: reading client, interval, smart folders). Theme = DMS.
