@@ -6,6 +6,11 @@ Covers what `just ci` cannot: live QML, live settings, real notmuch timing.
 Most of this version is non-regression: outside the three fixed bugs, nothing visible
 should change.
 
+**Run on 2026-10-17** against the isolated dev instance (`just dev-bar`), before tagging
+0.8.0. The four boxes ticked below are the ones actually exercised — the three bugs' own
+symptoms plus the collision case the branch review turned up. The unticked boxes were not
+run: they cover non-regression paths that no commit in this version touches.
+
 ## Settings — overrides (Task 1, non-regression)
 
 - [ ] Rename a tag (label override) → the rail shows the new label, the filter stays
@@ -20,8 +25,11 @@ should change.
 
 - [ ] Note an existing tag in the rail, say `boulot`. Add a composed search with that
       exact label (`Boulot`) and a different query (`tag:boulot and tag:unread`).
-- [ ] The rail now shows **two distinct entries** with **distinct counts** — the tag's
+- [x] The rail now shows **two distinct entries** with **distinct counts** — the tag's
       count and the composed one's. Neither displays the other's number.
+- [x] Same with a label aiming at a pinned universal (`Inbox`): the composed search gets
+      its own rail entry and count, and the universal Inbox keeps its own. (Found by the
+      branch review: this input used to make the composed search vanish.)
 - [ ] Add a second composed search with the same label again → a third entry, again with
       its own count.
 - [ ] Clicking each of the three filters the list on its own query.
@@ -30,7 +38,7 @@ should change.
 
 ## Sync status (Task 3, #4)
 
-- [ ] Normal use for a few polling cycles (20 s): the cockpit header never sticks on
+- [x] Normal use for a few polling cycles (20 s): the cockpit header never sticks on
       « erreur de synchro » while the thread list is correctly refreshing.
 - [ ] Force a real failure — point `NOTMUCH_CONFIG` at a config whose database path does
       not exist, so `notmuch search` runs and **exits non-zero** — and confirm the header
@@ -41,7 +49,7 @@ should change.
 
 ## Lazy snippets (Task 4, #7)
 
-- [ ] Open the cockpit on a list of 10+ threads. Hold `j` to run down the list quickly,
+- [x] Open the cockpit on a list of 10+ threads. Hold `j` to run down the list quickly,
       then stop. The snippet displayed under the selected row belongs to **that** row
       (compare with its subject/sender).
 - [ ] Same going back up with `k`.
