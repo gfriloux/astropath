@@ -7,9 +7,15 @@
 # Scratch — design handoffs, notes, sorties de travail (jamais commité)
 tmp/
 
-# Claude Code — réglages locaux et worktrees d'agents (les plans, eux, sont versionnés)
+# Claude Code — réglages locaux et worktrees d'agents.
+# .claude/plans/ reste versionné : c'est l'archive gelée de v0.1.0 … v0.8.0.
 .claude/settings.local.json
 .claude/worktrees/
+
+# Superpowers — scratch des agents (ledgers, briefs, paquets de relecture).
+# La règle vit ici et pas seulement dans .superpowers/sdd/.gitignore : ce dernier est
+# créé par l'outillage, ne couvre que sdd/, et n'existe pas avant son premier passage.
+.superpowers/
 
 # Éditeurs
 *.qmlc
