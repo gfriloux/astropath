@@ -229,6 +229,15 @@ StyledRect {
                         size: Theme.fontSizeMedium
                         color: Theme.warning
                     }
+
+                    // The attachment tag is in noiseTags, so it never reaches the chips.
+                    // It still deserves an affordance, and the data is already here.
+                    DankIcon {
+                        visible: row.thread.tags && row.thread.tags.indexOf("attachment") !== -1
+                        name: "attach_file"
+                        size: Theme.fontSizeMedium
+                        color: Theme.surfaceTextMedium
+                    }
                 }
             }
         }

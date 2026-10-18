@@ -44,6 +44,12 @@ QtObject {
 
     // Tag discovery: notmuch search --output=tags '*' → discoveredTags, which rebuilds
     // definitions (hence refreshCounts through onDefinitionsChanged).
+    //
+    // Deliberately NOT routed through the coalescing flight, unlike the search and the
+    // counts: the command is a static binding, so a re-arm that no-ops merely skips a run
+    // identical to the one already in flight, and the next poll picks it up anyway. A
+    // flight here would add state for no change in behaviour. Same reasoning for
+    // unreadProc below.
     function discoverTags() {
         tagsProc.running = true;
     }
@@ -58,14 +64,35 @@ QtObject {
     // Reading client command (config) — used to open a thread.
     property string readerCommand: ""
 
-    // Sets command imperatively (no lazy binding) then starts: guarantees the query that
-    // runs is the current one, even right after a change.
+    // Searches go through the coalescing flight. Re-arming a Process that is already
+    // running is a QML no-op, so a rail click or a free-text search landing while the
+    // 20 s poll's own search is still running used to be dropped in silence: the list
+    // kept showing the previous query's results until the next poll happened to pick the
+    // new currentQuery up.
     property var _searchRun: Svc.newSearchRun()
+    property var _searchFlight: Svc.newFlight()
+
     function runSearch() {
+        var r = Svc.requestFlight(root._searchFlight, root.currentQuery, false, searchProc.running);
+        root._searchFlight = r.flight;
+        if (r.dispatch)
+            _dispatchSearch(r.dispatch);
+    }
+    // Sets command imperatively (no lazy binding) then starts: guarantees the query that
+    // runs is the one the flight just dispatched, not whatever currentQuery became since.
+    function _dispatchSearch(query) {
         root._searchRun = Svc.newSearchRun();
         root.status = Svc.decideSearchStatus(root._searchRun);
-        searchProc.command = ["notmuch"].concat(Queries.search(root.currentQuery));
-        searchProc.running = true;
+        searchProc.command = ["notmuch"].concat(Queries.search(query));
+        searchProc.running = true; // safe: only ever called on an exited process
+    }
+    // Both completion signals land here; whatever the flight hands back is the query whose
+    // turn it now is.
+    function _advanceSearch(ev) {
+        var r = Svc.flightEvent(root._searchFlight, ev);
+        root._searchFlight = r.flight;
+        if (r.dispatch)
+            _dispatchSearch(r.dispatch);
     }
     // Records one observed fact about the running search, then recomputes the status from
     // all the facts gathered so far (the three handlers fire in no guaranteed order).
@@ -81,55 +108,57 @@ QtObject {
         refreshCounts();
     }
 
-    // Smart folder counters: one sequence at a time (non-reentrant). If asked again while
-    // one is running, we restart afterwards, with the up-to-date definitions.
-    property bool _counting: false
-    property bool _countPending: false
-    property var _countCb: null
+    // Smart folder counters: one notmuch count per definition, walked in order. Two
+    // concerns, kept apart (see service.js): the sequencer says WHAT runs next, the
+    // flight says WHEN a run is over. One sequence at a time — asked again while one
+    // runs, we restart afterwards with the up-to-date definitions.
+    property var _countSeq: Svc.newCountSeq()
+    property var _countFlight: Svc.newFlight()
+    property string _countText: ""
 
     function refreshCounts() {
-        if (root._counting) {
-            root._countPending = true;
-            return;
-        }
-        _startCounts();
-    }
-    function _startCounts() {
-        var defs = (definitions || []).slice(); // consistent snapshot
-        if (defs.length === 0) {
+        var r = Svc.startCounts(root._countSeq, root.definitions);
+        root._countSeq = r.seq;
+        if (r.dispatch)
+            _dispatchCount(r.dispatch);
+        else if (!root._countSeq.running)
             root.counts = {};
-            root._counting = false;
+    }
+    function _dispatchCount(query) {
+        var r = Svc.requestFlight(root._countFlight, query, false, countProc.running);
+        root._countFlight = r.flight;
+        if (!r.dispatch)
             return;
-        }
-        root._counting = true;
-        root._countPending = false;
-        var acc = {};
-        var i = 0;
-        function step() {
-            if (i >= defs.length) {
-                root.counts = acc;
-                root._counting = false;
-                if (root._countPending)
-                    root._startCounts();
-                return;
-            }
-            var def = defs[i];
-            root._countCb = function (text) {
-                acc[def.key] = Model.parseCount(text);
-                i++;
-                step();
-            };
-            countProc.command = ["notmuch"].concat(Queries.count(def.query));
-            countProc.running = true;
-        }
-        step();
+        root._countText = "";
+        countProc.command = ["notmuch"].concat(Queries.count(r.dispatch));
+        countProc.running = true; // safe: only ever called on an exited process
+    }
+    // Both signals must land before a run counts as over. Re-arming on the stream alone
+    // is what used to stop the sequence dead and leave it flagged running for the rest
+    // of the session, freezing every rail counter.
+    function _advanceCount(ev) {
+        var f = Svc.flightEvent(root._countFlight, ev);
+        root._countFlight = f.flight;
+        if (!f.completedKey)
+            return;
+        var r = Svc.countCompleted(root._countSeq, Model.parseCount(root._countText));
+        root._countSeq = r.seq;
+        if (r.counts)
+            root.counts = r.counts;
+        if (r.dispatch)
+            _dispatchCount(r.dispatch);
+        else if (r.restartNeeded)
+            refreshCounts();
     }
     property Process countProc: Process {
         running: false
         stdout: StdioCollector {
-            onStreamFinished: if (root._countCb)
-                root._countCb(text)
+            onStreamFinished: {
+                root._countText = text;
+                root._advanceCount("stream");
+            }
         }
+        onExited: root._advanceCount("exit")
     }
 
     function setQuery(q) {
@@ -142,10 +171,25 @@ QtObject {
         setQuery(t && t.length > 0 ? t : Queries.UNREAD_QUERY);
     }
 
-    // Tag mutations (tag-only). On success → refresh the list.
+    // Tag mutations (tag-only). Queued, never coalesced: archiving several threads in a
+    // row is several distinct side effects, and the old code — command then running=true
+    // on a Process that might already be running — silently lost every one after the
+    // first. The user saw the action accepted and nothing happened.
+    property var _tagQueue: Svc.newTagQueue()
+    property bool _tagFailed: false
+
     function tag(threadId, ops) {
-        tagProc.command = ["notmuch"].concat(Queries.tagThread(threadId, ops));
-        tagProc.running = true;
+        var r = Svc.requestTag(root._tagQueue, {
+            "id": threadId,
+            "ops": ops
+        }, tagProc.running);
+        root._tagQueue = r.queue;
+        if (r.dispatch)
+            _dispatchTag(r.dispatch);
+    }
+    function _dispatchTag(op) {
+        tagProc.command = ["notmuch"].concat(Queries.tagThread(op.id, op.ops));
+        tagProc.running = true; // safe: only ever called on an exited process
     }
     function markRead(id) {
         tag(id, {
@@ -182,14 +226,14 @@ QtObject {
     // Lazy snippets: fetched through notmuch show for the current item only
     // (one process at a time, cached by thread id).
     property var snippets: ({})
-    property var _snippetQueue: Svc.newSnippetQueue()
+    property var _snippetFlight: Svc.newFlight()
     property string _snippetText: ""
 
     function fetchSnippet(id) {
         // showProc.running is how we tell a run that is still coming from one that died
         // without ever completing (notmuch failing to start emits no completion signal).
-        var r = Svc.requestSnippet(root._snippetQueue, id, root.snippets[id] !== undefined, showProc.running);
-        root._snippetQueue = r.queue;
+        var r = Svc.requestFlight(root._snippetFlight, id, root.snippets[id] !== undefined, showProc.running);
+        root._snippetFlight = r.flight;
         if (r.dispatch)
             _dispatchSnippet(r.dispatch);
     }
@@ -201,13 +245,13 @@ QtObject {
     // Both completion signals land here; the collected output is only attributed once the
     // run is over, under the id that actually asked for it.
     function _advanceSnippet(ev) {
-        var r = Svc.snippetEvent(root._snippetQueue, ev);
-        root._snippetQueue = r.queue;
-        if (r.completedId) {
+        var r = Svc.flightEvent(root._snippetFlight, ev);
+        root._snippetFlight = r.flight;
+        if (r.completedKey) {
             try {
                 var detail = Model.parseShow(JSON.parse(root._snippetText));
                 var m = Object.assign({}, root.snippets);
-                m[r.completedId] = detail.snippet;
+                m[r.completedKey] = detail.snippet;
                 root.snippets = m;
             } catch (e) {
                 console.warn("astropath: show parse failed:", e);
@@ -241,6 +285,7 @@ QtObject {
                     root._noteSearch(Svc.searchStdoutFact(false));
                     console.warn("astropath: search parse failed:", e);
                 }
+                root._advanceSearch("stream");
             }
         }
 
@@ -251,21 +296,43 @@ QtObject {
                 console.warn("astropath notmuch:", text.trim())
         }
 
-        onExited: code => root._noteSearch({
+        onExited: code => {
+            root._noteSearch({
                 "exited": true,
                 "exitCode": code
-            })
+            });
+            root._advanceSearch("exit");
+        }
     }
 
     // Tag mutation: notmuch tag … -- thread:id.
     property Process tagProc: Process {
         running: false
 
+        // A failure is reported but does NOT stop the drain: one bad op must not strand
+        // the mutations queued behind it. The refresh waits for the queue to empty, so a
+        // burst of archives costs one refresh rather than one per thread.
+        //
+        // It is skipped when any op in the burst failed, which generalises the old
+        // "refresh only on code === 0". Not for freshness — the ops that did succeed
+        // changed the database — but because refresh() walks status through querying and
+        // back to idle, so refreshing here would wipe the error before it could be read.
+        // The next poll picks the change up within intervalMs, exactly as it used to.
         onExited: code => {
-            if (code === 0)
-                root.refresh();
-            else
+            if (code !== 0) {
+                root._tagFailed = true;
                 root.status = "error";
+            }
+            var r = Svc.tagEvent(root._tagQueue);
+            root._tagQueue = r.queue;
+            if (r.dispatch) {
+                root._dispatchTag(r.dispatch);
+                return;
+            }
+            var failed = root._tagFailed;
+            root._tagFailed = false;
+            if (!failed)
+                root.refresh();
         }
 
         stderr: StdioCollector {

@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# Checks plugin.json against DankMaterialShell's own published plugin schema.
+#
+# astropath is a plugin dropped into an arbitrary DMS installation: it cannot pin the
+# host, so the manifest is the only place the contract between the two is written down.
+# This gate exists to catch that contract drifting — a required field lost, a value
+# outside an enum DMS accepts, a path pointing at a file that no longer exists.
+#
+# The first three checks are driven FROM the vendored schema rather than restating it,
+# so the gate tracks what upstream declares instead of fossilising a copy of it. To pick
+# up a newer DMS, drop its PLUGINS/plugin-schema.json in as a new versioned file here
+# and update SCHEMA below; what the gate enforces follows automatically.
+#
+# jq only: it is already in the dev shell, so `just ci` stays hermetic and gains no
+# dependency.
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+manifest="$root/plugin.json"
+SCHEMA="$root/tests/vendor/dms-plugin-schema-v1.5.3.json"
+
+for f in "$manifest" "$SCHEMA"; do
+    [ -r "$f" ] || { echo "check-manifest: cannot read $f" >&2; exit 1; }
+done
+
+fail=0
+report() { echo "plugin.json: $1" >&2; fail=1; }
+
+# 1 — every field the schema requires is present.
+while read -r key; do
+    [ -n "$key" ] || continue
+    report "missing required field '$key'"
+done < <(jq -r --slurpfile s "$SCHEMA" '
+    ($s[0].required // []) - (keys) | .[]' "$manifest")
+
+# 2 — no key the schema does not know about.
+while read -r key; do
+    [ -n "$key" ] || continue
+    report "unknown field '$key' (not in the DMS schema)"
+done < <(jq -r --slurpfile s "$SCHEMA" '
+    (keys) - ($s[0].properties | keys) | .[]' "$manifest")
+
+# 3 — scalar and array values within the enums the schema allows.
+while read -r msg; do
+    [ -n "$msg" ] || continue
+    report "$msg"
+done < <(jq -r --slurpfile s "$SCHEMA" '
+    . as $m
+    | $s[0].properties
+    | to_entries[]
+    | select($m[.key] != null)
+    | .key as $k
+    | .value as $p
+    | if ($p.enum != null) and (($m[$k] | IN($p.enum[])) | not)
+      then "\($k) = \($m[$k] | tostring) is outside the allowed values \($p.enum | tostring)"
+      elif ($p.items.enum != null) and (($m[$k] | type) == "array")
+      then ($m[$k] - $p.items.enum | .[] | "\($k) contains \(. | tostring), which is not an allowed value")
+      else empty
+      end' "$manifest")
+
+# 4 — the deprecated alias. The schema still lists it, so check 2 will not catch it, but
+# the loader reads neither it nor the field it aliases: declaring a dependency there has
+# no effect anywhere.
+if jq -e 'has("requires")' "$manifest" >/dev/null; then
+    report "'requires' is a deprecated alias the loader never reads — use 'dependencies'"
+fi
+
+# 5 — the host floor must be declared, and in the form DMS parses.
+pattern=$(jq -r '.properties.requires_dms.pattern' "$SCHEMA")
+if ! jq -e 'has("requires_dms")' "$manifest" >/dev/null; then
+    report "no 'requires_dms': the DMS version floor is undeclared, so DMS cannot enforce it"
+elif ! jq -e --arg p "$pattern" '.requires_dms | test($p)' "$manifest" >/dev/null; then
+    report "requires_dms = $(jq -r .requires_dms "$manifest") does not match the schema pattern $pattern"
+fi
+
+# 6 — the paths the manifest points at exist. The schema cannot know this.
+while read -r rel; do
+    [ -n "$rel" ] || continue
+    [ -e "$root/${rel#./}" ] || report "references '$rel', which does not exist"
+done < <(jq -r '[.component, .settings, .startupCheck, (.components // {} | .[])]
+    | map(select(. != null)) | .[]' "$manifest")
+
+[ "$fail" -eq 0 ] || exit 1
+echo "plugin.json: conformant with $(basename "$SCHEMA")"
