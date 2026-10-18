@@ -40,6 +40,95 @@ function decideSearchStatus(run) {
     return run.parseOk ? "idle" : "error";
 }
 
+// --- counts sequencer ------------------------------------------------------
+// The rail counters are one notmuch count per definition, run in order. This decides
+// WHAT runs next; the flight below decides WHEN one run is over. Keeping them apart is
+// what fixes the old latch: _startCounts() re-armed countProc from onStreamFinished
+// alone, and when the stream finished before the exit that re-arm was a no-op — the
+// sequence stopped mid-way and its "running" flag was never cleared, so no rail counter
+// updated again for the rest of the session.
+
+function newCountSeq() {
+    return {
+        keys: [],
+        queries: [],
+        index: 0,
+        acc: {},
+        running: false,
+        restart: false
+    };
+}
+
+// → { seq, dispatch }: dispatch is the query to count now, "" if nothing starts.
+// Asked again while a sequence runs, the request is remembered rather than interleaved:
+// the definitions may have changed, and two sequences sharing one Process would scramble
+// each other's accumulator.
+function startCounts(seq, defs) {
+    if (seq.running)
+        return {
+            seq: Object.assign({}, seq, {
+                restart: true
+            }),
+            dispatch: ""
+        };
+    var list = defs || [];
+    if (list.length === 0)
+        return {
+            seq: newCountSeq(),
+            dispatch: ""
+        };
+    return {
+        seq: {
+            keys: list.map(function (d) {
+                return d.key;
+            }),
+            queries: list.map(function (d) {
+                return d.query;
+            }),
+            index: 0,
+            acc: {},
+            running: true,
+            restart: false
+        },
+        dispatch: list[0].query
+    };
+}
+
+// → { seq, dispatch, counts, restartNeeded }: counts is the finished accumulator, null
+// while the sequence is still walking. A completion arriving when no sequence is running
+// belongs to one that was abandoned and is dropped, or its count would leak into the
+// accumulator of the sequence running now.
+function countCompleted(seq, count) {
+    if (!seq.running)
+        return {
+            seq: seq,
+            dispatch: "",
+            counts: null,
+            restartNeeded: false
+        };
+    var acc = Object.assign({}, seq.acc);
+    acc[seq.keys[seq.index]] = count;
+    var next = seq.index + 1;
+    if (next < seq.keys.length)
+        return {
+            seq: Object.assign({}, seq, {
+                index: next,
+                acc: acc
+            }),
+            dispatch: seq.queries[next],
+            counts: null,
+            restartNeeded: false
+        };
+    return {
+        seq: Object.assign({}, newCountSeq(), {
+            acc: acc
+        }),
+        dispatch: "",
+        counts: acc,
+        restartNeeded: !!seq.restart
+    };
+}
+
 // --- tag mutations: one run at a time, but NOTHING is discarded -------------
 // The flight below coalesces because a superseded READ produces results the newest one
 // would overwrite anyway. A mutation is the opposite: archiving thread A and then thread

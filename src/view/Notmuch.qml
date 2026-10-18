@@ -108,55 +108,57 @@ QtObject {
         refreshCounts();
     }
 
-    // Smart folder counters: one sequence at a time (non-reentrant). If asked again while
-    // one is running, we restart afterwards, with the up-to-date definitions.
-    property bool _counting: false
-    property bool _countPending: false
-    property var _countCb: null
+    // Smart folder counters: one notmuch count per definition, walked in order. Two
+    // concerns, kept apart (see service.js): the sequencer says WHAT runs next, the
+    // flight says WHEN a run is over. One sequence at a time — asked again while one
+    // runs, we restart afterwards with the up-to-date definitions.
+    property var _countSeq: Svc.newCountSeq()
+    property var _countFlight: Svc.newFlight()
+    property string _countText: ""
 
     function refreshCounts() {
-        if (root._counting) {
-            root._countPending = true;
-            return;
-        }
-        _startCounts();
-    }
-    function _startCounts() {
-        var defs = (definitions || []).slice(); // consistent snapshot
-        if (defs.length === 0) {
+        var r = Svc.startCounts(root._countSeq, root.definitions);
+        root._countSeq = r.seq;
+        if (r.dispatch)
+            _dispatchCount(r.dispatch);
+        else if (!root._countSeq.running)
             root.counts = {};
-            root._counting = false;
+    }
+    function _dispatchCount(query) {
+        var r = Svc.requestFlight(root._countFlight, query, false, countProc.running);
+        root._countFlight = r.flight;
+        if (!r.dispatch)
             return;
-        }
-        root._counting = true;
-        root._countPending = false;
-        var acc = {};
-        var i = 0;
-        function step() {
-            if (i >= defs.length) {
-                root.counts = acc;
-                root._counting = false;
-                if (root._countPending)
-                    root._startCounts();
-                return;
-            }
-            var def = defs[i];
-            root._countCb = function (text) {
-                acc[def.key] = Model.parseCount(text);
-                i++;
-                step();
-            };
-            countProc.command = ["notmuch"].concat(Queries.count(def.query));
-            countProc.running = true;
-        }
-        step();
+        root._countText = "";
+        countProc.command = ["notmuch"].concat(Queries.count(r.dispatch));
+        countProc.running = true; // safe: only ever called on an exited process
+    }
+    // Both signals must land before a run counts as over. Re-arming on the stream alone
+    // is what used to stop the sequence dead and leave it flagged running for the rest
+    // of the session, freezing every rail counter.
+    function _advanceCount(ev) {
+        var f = Svc.flightEvent(root._countFlight, ev);
+        root._countFlight = f.flight;
+        if (!f.completedKey)
+            return;
+        var r = Svc.countCompleted(root._countSeq, Model.parseCount(root._countText));
+        root._countSeq = r.seq;
+        if (r.counts)
+            root.counts = r.counts;
+        if (r.dispatch)
+            _dispatchCount(r.dispatch);
+        else if (r.restartNeeded)
+            refreshCounts();
     }
     property Process countProc: Process {
         running: false
         stdout: StdioCollector {
-            onStreamFinished: if (root._countCb)
-                root._countCb(text)
+            onStreamFinished: {
+                root._countText = text;
+                root._advanceCount("stream");
+            }
         }
+        onExited: root._advanceCount("exit")
     }
 
     function setQuery(q) {

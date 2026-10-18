@@ -123,6 +123,58 @@ TestCase {
         }
     }
 
+    // --- counts sequencer -----------------------------------------------------------
+
+    function test_startCounts_walksEveryDefinitionInOrder() {
+        var defs = [
+            {
+                "key": "inbox",
+                "query": "tag:inbox"
+            },
+            {
+                "key": "flagged",
+                "query": "tag:flagged"
+            }
+        ];
+        var s = Svc.startCounts(Svc.newCountSeq(), defs);
+        compare(s.dispatch, "tag:inbox");
+        var first = Svc.countCompleted(s.seq, 12);
+        compare(first.dispatch, "tag:flagged");
+        compare(first.counts, null);
+        var second = Svc.countCompleted(first.seq, 3);
+        compare(second.dispatch, "");
+        compare(second.counts.inbox, 12);
+        compare(second.counts.flagged, 3);
+    }
+
+    function test_startCounts_emptyDefsIsNoop() {
+        var s = Svc.startCounts(Svc.newCountSeq(), []);
+        compare(s.dispatch, "");
+        compare(s.seq.running, false);
+    }
+
+    function test_startCounts_restartsAfterTheRunningSequence() {
+        var defs = [
+            {
+                "key": "inbox",
+                "query": "tag:inbox"
+            }
+        ];
+        var s = Svc.startCounts(Svc.newCountSeq(), defs);
+        var again = Svc.startCounts(s.seq, defs);
+        compare(again.dispatch, ""); // nothing starts mid-sequence
+        compare(Svc.countCompleted(again.seq, 1).restartNeeded, true);
+    }
+
+    // A completion belonging to a sequence that was abandoned must not leak a stale count
+    // into the accumulator of the one running now.
+    function test_countCompleted_afterAbandonIsIgnored() {
+        var done = Svc.countCompleted(Svc.newCountSeq(), 99);
+        compare(done.counts, null);
+        compare(done.dispatch, "");
+        compare(Object.keys(done.seq.acc).length, 0);
+    }
+
     // --- tag mutations: the queueing policy, NOT the coalescing one -----------------
 
     function test_requestTag_queuesEveryMutationInOrder() {
