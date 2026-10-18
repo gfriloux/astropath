@@ -493,7 +493,39 @@ A comment recording the measurement — DMS's `StyledText` has pinned `textForma
 
 ## Manual validation
 
-Run at the close of the plan; `just dev-bar` from the worktree, one dev bar at a time, `just reload` after each change.
+**Run 2026-10-18.** The plan was executed non-interactively, with no Wayland session
+available to drive a dev bar. Everything reachable from the shell was exercised; the rest
+is listed unticked below and needs a human at `just dev-bar`. Nothing is ticked that was
+not actually observed.
+
+Exercised:
+
+- The startup probe on all three paths it must distinguish. `notmuch count --output=threads '*'`
+  returns 0 with a count; with `notmuch` off `PATH` the command does not start (the case
+  the 5 s timer covers, since no exit signal is emitted); with an unreadable config it
+  exits 1 and writes `Error: cannot load config file.` to stderr, which is what the
+  blocking message carries as its details.
+- The manifest gate both ways: red on the pre-change manifest (deprecated `requires`,
+  no `requires_dms`), green after. Fault injection confirmed each of its six checks
+  fires independently — missing required field, unknown field, value outside an enum,
+  array entry outside an enum, malformed `requires_dms`, and a referenced path that does
+  not exist.
+- `just ci` green at every commit, 68 tests from 57.
+
+Not exercised, needs a dev bar:
+
+- [ ] Clicking a rail category while a poll-triggered search is in flight ends with the list showing the newest query's results, not the previous one's.
+- [ ] Typing a free-text search during a poll behaves the same.
+- [ ] Archiving three threads in rapid succession removes all three from the inbox.
+- [ ] A tag mutation that fails does not prevent the ones queued behind it from running, and its error status stays readable.
+- [ ] Rail counters still update after a long session with heavy navigation (the latch is gone).
+- [ ] With `notmuch` removed from `PATH`, enabling the plugin shows the blocking message; with it present, activation is unchanged.
+- [ ] A thread tagged `attachment` shows a paperclip beside the chips, distinct from the flag icon.
+- [ ] A thread without the tag shows no icon, and the surrounding chips do not shift.
+
+### Original list
+
+`just dev-bar` from the worktree, one dev bar at a time, `just reload` after each change.
 
 - [ ] Clicking a rail category while a poll-triggered search is in flight ends with the list showing the newest query's results, not the previous one's.
 - [ ] Typing a free-text search during a poll behaves the same.
