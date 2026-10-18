@@ -182,14 +182,14 @@ QtObject {
     // Lazy snippets: fetched through notmuch show for the current item only
     // (one process at a time, cached by thread id).
     property var snippets: ({})
-    property var _snippetQueue: Svc.newSnippetQueue()
+    property var _snippetFlight: Svc.newFlight()
     property string _snippetText: ""
 
     function fetchSnippet(id) {
         // showProc.running is how we tell a run that is still coming from one that died
         // without ever completing (notmuch failing to start emits no completion signal).
-        var r = Svc.requestSnippet(root._snippetQueue, id, root.snippets[id] !== undefined, showProc.running);
-        root._snippetQueue = r.queue;
+        var r = Svc.requestFlight(root._snippetFlight, id, root.snippets[id] !== undefined, showProc.running);
+        root._snippetFlight = r.flight;
         if (r.dispatch)
             _dispatchSnippet(r.dispatch);
     }
@@ -201,13 +201,13 @@ QtObject {
     // Both completion signals land here; the collected output is only attributed once the
     // run is over, under the id that actually asked for it.
     function _advanceSnippet(ev) {
-        var r = Svc.snippetEvent(root._snippetQueue, ev);
-        root._snippetQueue = r.queue;
-        if (r.completedId) {
+        var r = Svc.flightEvent(root._snippetFlight, ev);
+        root._snippetFlight = r.flight;
+        if (r.completedKey) {
             try {
                 var detail = Model.parseShow(JSON.parse(root._snippetText));
                 var m = Object.assign({}, root.snippets);
-                m[r.completedId] = detail.snippet;
+                m[r.completedKey] = detail.snippet;
                 root.snippets = m;
             } catch (e) {
                 console.warn("astropath: show parse failed:", e);

@@ -40,45 +40,54 @@ function decideSearchStatus(run) {
     return run.parseOk ? "idle" : "error";
 }
 
-// --- lazy snippet requests -------------------------------------------------
-// Keyboard navigation asks for a snippet per row it lands on, faster than notmuch show
-// answers. One request runs at a time and its id is frozen for the whole run: a result is
-// attributed to the thread that asked for it, never to whichever row is current when the
-// process happens to finish. At most one request waits, always the newest.
+// --- coalescing single flight ----------------------------------------------
+// The dispatch discipline for every READ we make of notmuch: searches, snippets, the
+// per-definition counts. One run at a time, and its key is frozen for the whole run, so a
+// result is attributed to whatever asked for it rather than to whatever happens to be
+// current when the process finishes.
+//
+// At most one request waits, always the newest. Superseded requests are DISCARDED on
+// purpose, not forgotten: running them would produce results the newest one would
+// overwrite a moment later. Mutations do not get this policy — see the tag queue below,
+// where dropping a request would drop a side effect.
+//
+// Re-arming a Process that is already running is a QML no-op: the new command is ignored
+// and the request vanishes. Nothing here may re-arm without going through this machine.
 
-function newSnippetQueue() {
+function newFlight() {
     return {
         inflight: "",
         pending: "",
-        textReady: false,
+        streamDone: false,
         exited: false
     };
 }
 
-// → { queue, dispatch }: dispatch is the id to actually run now, "" if nothing starts.
+// → { flight, dispatch }: dispatch is the key to actually run now, "" if nothing starts.
 // inflightAlive tells us whether the process we believe is running actually is: one that
 // died without completing (notmuch failing to start emits no completion signal) would
-// otherwise hold the queue forever, killing snippets for the rest of the session. The old
-// code re-armed the process on every request and healed by itself; this keeps that.
-function requestSnippet(queue, id, isCached, inflightAlive) {
-    var q = (queue.inflight && !inflightAlive) ? newSnippetQueue() : queue;
-    if (!id || isCached || id === q.inflight)
+// otherwise hold the flight forever, killing the feature for the rest of the session. The
+// old code re-armed the process on every request and healed by itself; this keeps that.
+// skip is the caller's "nothing to do" predicate (snippets pass "already cached").
+function requestFlight(flight, key, skip, inflightAlive) {
+    var f = (flight.inflight && !inflightAlive) ? newFlight() : flight;
+    if (!key || skip || key === f.inflight)
         return {
-            queue: q,
+            flight: f,
             dispatch: ""
         };
-    if (!q.inflight)
+    if (!f.inflight)
         return {
-            queue: Object.assign({}, q, {
-                inflight: id,
-                textReady: false,
+            flight: Object.assign({}, f, {
+                inflight: key,
+                streamDone: false,
                 exited: false
             }),
-            dispatch: id
+            dispatch: key
         };
     return {
-        queue: Object.assign({}, q, {
-            pending: id
+        flight: Object.assign({}, f, {
+            pending: key
         }),
         dispatch: ""
     };
@@ -86,30 +95,30 @@ function requestSnippet(queue, id, isCached, inflightAlive) {
 
 // One of the running process' two completion signals: ev = "stream" | "exit". The run is
 // over only once both have landed — their order is not guaranteed.
-// → { queue, completedId, dispatch }: completedId is the id the collected output belongs
-// to ("" while the run is not over), dispatch the id whose turn it now is.
-function snippetEvent(queue, ev) {
-    var q = Object.assign({}, queue, ev === "stream" ? {
-        textReady: true
+// → { flight, completedKey, dispatch }: completedKey is the key the collected output
+// belongs to ("" while the run is not over), dispatch the key whose turn it now is.
+function flightEvent(flight, ev) {
+    var f = Object.assign({}, flight, ev === "stream" ? {
+        streamDone: true
     } : {
         exited: true
     });
-    if (!q.textReady || !q.exited)
+    if (!f.streamDone || !f.exited)
         return {
-            queue: q,
-            completedId: "",
+            flight: f,
+            completedKey: "",
             dispatch: ""
         };
-    var completedId = q.inflight;
-    var next = q.pending;
+    var completedKey = f.inflight;
+    var next = f.pending;
     return {
-        queue: {
+        flight: {
             inflight: next,
             pending: "",
-            textReady: false,
+            streamDone: false,
             exited: false
         },
-        completedId: completedId,
+        completedKey: completedKey,
         dispatch: next
     };
 }
