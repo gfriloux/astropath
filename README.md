@@ -51,7 +51,12 @@ it once (other screen/edge), which persists in its config.
 
 ## Installation
 
-astropath is a **DankMaterialShell plugin**. Via the home-manager module:
+astropath is a **DankMaterialShell plugin**, and needs **DMS ≥ 1.5.0**. That floor is the
+`startupCheck` mechanism, which is how the plugin reports an unusable `notmuch` when you
+enable it rather than failing obscurely later; it landed in DMS 1.5.0. `plugin.json`
+declares the requirement as `requires_dms`, so DMS enforces it for you.
+
+Via the home-manager module:
 
 ```nix
 inputs.astropath.url = "github:gfriloux/astropath";
@@ -67,7 +72,8 @@ reading client and smart folders in its settings.
 
 ## Code structure
 
-- `plugin.json` — DMS plugin manifest (widget type, permissions, icon).
+- `plugin.json` — DMS plugin manifest (widget type, permissions, icon, DMS floor,
+  activation gate). Checked against DMS's published schema by `just lint`.
 - `src/query/` — notmuch command construction (argv), pure JS.
 - `src/model/` — `notmuch` JSON → model transforms (`parseSearch`/`parseCount`/
   `savedSearches`/`parseShow`) + `format.js` + `overrides.js` (settings algebra) +
