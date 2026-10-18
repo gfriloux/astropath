@@ -3,6 +3,38 @@
 All notable changes to astropath are documented here.
 Releases follow [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] — 2026-10-18
+
+### Bug Fixes
+
+- **view**: never drop a search when one is already in flight ([`0348ec7`](https://github.com/gfriloux/astropath/commit/0348ec786f033d295f6ba9d87af87598efacc76e))
+- **view**: queue tag mutations instead of dropping all but the first ([`798243e`](https://github.com/gfriloux/astropath/commit/798243e41f1d5753fd0976d992603b4b361911c2))
+- **view**: stop the counts sequence latching for the session ([`a6789a3`](https://github.com/gfriloux/astropath/commit/a6789a3b8a8f83ad2c5f67088123cce72571a369))
+- **view**: keep a failed tag mutation's error status readable ([`6a5ea45`](https://github.com/gfriloux/astropath/commit/6a5ea4520690efda42e765713bb39eebf1cd0f90))
+
+### Documentation
+
+- adopt the superpowers document tree and ignore agent scratch ([`3c179ca`](https://github.com/gfriloux/astropath/commit/3c179ca4cdcddb29aa841142b44d21fa3e116d33))
+- reduce PROCEDURE_PLANS.md to this project's specifics ([`19e7e46`](https://github.com/gfriloux/astropath/commit/19e7e46a9881b94ae0581dc55a17da3b11be2702))
+- point CLAUDE.md and README.md at the superpowers norm ([`19553ab`](https://github.com/gfriloux/astropath/commit/19553abf9f19f98a813b2e5d9b1a79af00ce0310))
+- apply the branch review fixes to CLAUDE.md, README.md and PROCEDURE_PLANS.md ([`ded76dd`](https://github.com/gfriloux/astropath/commit/ded76dd93d0c76300bf73cfbd752a8ca86750270))
+- record the superpowers norm migration validation ([`47b4c5a`](https://github.com/gfriloux/astropath/commit/47b4c5a31202412cdb07464eb33f2c515e58353f))
+- restore the two rules dropped from PROCEDURE_PLANS.md ([`73af93f`](https://github.com/gfriloux/astropath/commit/73af93f5b4f32f63094527435b4c36d955d9eb3f))
+- design and plan for the contracts pass ([`ced5f37`](https://github.com/gfriloux/astropath/commit/ced5f3737c507285df3d009d58d2f3d27e2e912e))
+- record the contracts pass manual validation ([`bc559c1`](https://github.com/gfriloux/astropath/commit/bc559c10fd3de7557273d49c8efea150da77e24c))
+
+### Features
+
+- **view**: show an attachment indicator on thread rows ([`8150fbc`](https://github.com/gfriloux/astropath/commit/8150fbc31537143da036849874eb66040a820fa0))
+- **nix**: declare the DMS floor and gate activation on notmuch ([`a0fc36f`](https://github.com/gfriloux/astropath/commit/a0fc36f1611c15237ac00fcda1d8f137efcfed3b))
+
+### Refactoring
+
+- **model**: generalise the snippet queue into a coalescing flight machine ([`deecf5f`](https://github.com/gfriloux/astropath/commit/deecf5f7184f5950185a255c25c6d8aceb4134e1))
+
+### Testing
+
+- **nix**: check plugin.json against DMS's published plugin schema ([`8c4b983`](https://github.com/gfriloux/astropath/commit/8c4b9833943a0f3d941979f4d58bff7596c99f02))
 ## [0.8.0] — 2026-10-17
 
 ### Bug Fixes
@@ -16,6 +48,7 @@ Releases follow [Semantic Versioning](https://semver.org/).
 
 - translate project documentation to English ([`338eb33`](https://github.com/gfriloux/astropath/commit/338eb33a4df0c628425aa7628e92cd5c009a84e4))
 - record the v0.8.0 manual validation ([`05ca1e8`](https://github.com/gfriloux/astropath/commit/05ca1e82bbc567fce8d7943f7e7af34fc9e6b7fe))
+- changelog v0.8.0 ([`1171f1d`](https://github.com/gfriloux/astropath/commit/1171f1d6363c07529f2be7339620851dcfbaf3dd))
 
 ### Refactoring
 
