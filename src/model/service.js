@@ -40,6 +40,66 @@ function decideSearchStatus(run) {
     return run.parseOk ? "idle" : "error";
 }
 
+// --- tag mutations: one run at a time, but NOTHING is discarded -------------
+// The flight below coalesces because a superseded READ produces results the newest one
+// would overwrite anyway. A mutation is the opposite: archiving thread A and then thread
+// B are two distinct side effects on the database, so "newest wins" here is data loss.
+// Every op runs, in the order it was asked for.
+//
+// Ops are opaque: the caller puts in whatever it needs to build its command, and gets the
+// same value back to dispatch.
+
+function newTagQueue() {
+    return {
+        inflight: null,
+        pending: []
+    };
+}
+
+// → { queue, dispatch }: dispatch is the op to run now, null if one is already running.
+// inflightAlive has the same job as in requestFlight: a process that died without ever
+// emitting its exit (notmuch failing to start) would otherwise hold the queue forever.
+function requestTag(queue, op, inflightAlive) {
+    var q = (queue.inflight && !inflightAlive) ? newTagQueue() : queue;
+    if (!op)
+        return {
+            queue: q,
+            dispatch: null
+        };
+    if (!q.inflight)
+        return {
+            queue: Object.assign({}, q, {
+                inflight: op
+            }),
+            dispatch: op
+        };
+    return {
+        queue: Object.assign({}, q, {
+            pending: q.pending.concat([op])
+        }),
+        dispatch: null
+    };
+}
+
+// A mutation produces nothing we read, so its single exit signal ends it. The exit CODE
+// is deliberately not an input: a failed mutation still advances the queue, or one bad
+// op would strand every op behind it.
+// → { queue, completed, dispatch }: completed is the op that just finished, dispatch the
+// next one, null once the queue has drained.
+function tagEvent(queue) {
+    var completed = queue.inflight;
+    var rest = queue.pending.slice();
+    var next = rest.length > 0 ? rest.shift() : null;
+    return {
+        queue: {
+            inflight: next,
+            pending: rest
+        },
+        completed: completed,
+        dispatch: next
+    };
+}
+
 // --- coalescing single flight ----------------------------------------------
 // The dispatch discipline for every READ we make of notmuch: searches, snippets, the
 // per-definition counts. One run at a time, and its key is frozen for the whole run, so a

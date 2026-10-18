@@ -123,6 +123,61 @@ TestCase {
         }
     }
 
+    // --- tag mutations: the queueing policy, NOT the coalescing one -----------------
+
+    function test_requestTag_queuesEveryMutationInOrder() {
+        var q = Svc.requestTag(Svc.newTagQueue(), {
+            "id": "A"
+        }, false);
+        compare(q.dispatch.id, "A");
+        var b = Svc.requestTag(q.queue, {
+            "id": "B"
+        }, true);
+        compare(b.dispatch, null); // A is running
+        var c = Svc.requestTag(b.queue, {
+            "id": "C"
+        }, true);
+        compare(c.queue.pending.length, 2); // B and C both kept — newest does NOT win
+        var afterA = Svc.tagEvent(c.queue);
+        compare(afterA.completed.id, "A");
+        compare(afterA.dispatch.id, "B"); // FIFO
+        compare(Svc.tagEvent(afterA.queue).dispatch.id, "C");
+    }
+
+    function test_tagEvent_drainsToEmpty() {
+        var q = Svc.requestTag(Svc.newTagQueue(), {
+            "id": "A"
+        }, false).queue;
+        var done = Svc.tagEvent(q);
+        compare(done.dispatch, null);
+        compare(done.queue.inflight, null);
+    }
+
+    // The exit code is deliberately not an input here. A mutation that fails still
+    // advances the queue, so the archives queued behind it are not stranded.
+    function test_tagEvent_advancesWhateverTheOutcome() {
+        var q = Svc.requestTag(Svc.newTagQueue(), {
+            "id": "A"
+        }, false).queue;
+        q = Svc.requestTag(q, {
+            "id": "B"
+        }, true).queue;
+        compare(Svc.tagEvent(q).dispatch.id, "B");
+    }
+
+    function test_requestTag_emptyOpIsNoop() {
+        compare(Svc.requestTag(Svc.newTagQueue(), null, false).dispatch, null);
+    }
+
+    function test_requestTag_deadInflightIsAbandoned() {
+        var q = Svc.requestTag(Svc.newTagQueue(), {
+            "id": "A"
+        }, false).queue;
+        compare(Svc.requestTag(q, {
+            "id": "B"
+        }, false).dispatch.id, "B");
+    }
+
     // The search flight keys on the query string, so a request identical to the one in
     // flight is a real case: clicking rail A, then B, then A again while A still runs.
     // It must neither double-dispatch nor vanish.

@@ -169,10 +169,24 @@ QtObject {
         setQuery(t && t.length > 0 ? t : Queries.UNREAD_QUERY);
     }
 
-    // Tag mutations (tag-only). On success → refresh the list.
+    // Tag mutations (tag-only). Queued, never coalesced: archiving several threads in a
+    // row is several distinct side effects, and the old code — command then running=true
+    // on a Process that might already be running — silently lost every one after the
+    // first. The user saw the action accepted and nothing happened.
+    property var _tagQueue: Svc.newTagQueue()
+
     function tag(threadId, ops) {
-        tagProc.command = ["notmuch"].concat(Queries.tagThread(threadId, ops));
-        tagProc.running = true;
+        var r = Svc.requestTag(root._tagQueue, {
+            "id": threadId,
+            "ops": ops
+        }, tagProc.running);
+        root._tagQueue = r.queue;
+        if (r.dispatch)
+            _dispatchTag(r.dispatch);
+    }
+    function _dispatchTag(op) {
+        tagProc.command = ["notmuch"].concat(Queries.tagThread(op.id, op.ops));
+        tagProc.running = true; // safe: only ever called on an exited process
     }
     function markRead(id) {
         tag(id, {
@@ -292,11 +306,18 @@ QtObject {
     property Process tagProc: Process {
         running: false
 
+        // A failure is reported but does NOT stop the drain: one bad op must not strand
+        // the mutations queued behind it. The refresh waits for the queue to empty, so a
+        // burst of archives costs one refresh rather than one per thread.
         onExited: code => {
-            if (code === 0)
-                root.refresh();
-            else
+            if (code !== 0)
                 root.status = "error";
+            var r = Svc.tagEvent(root._tagQueue);
+            root._tagQueue = r.queue;
+            if (r.dispatch)
+                root._dispatchTag(r.dispatch);
+            else
+                root.refresh();
         }
 
         stderr: StdioCollector {
