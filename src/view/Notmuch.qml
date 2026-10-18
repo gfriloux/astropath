@@ -176,6 +176,7 @@ QtObject {
     // on a Process that might already be running — silently lost every one after the
     // first. The user saw the action accepted and nothing happened.
     property var _tagQueue: Svc.newTagQueue()
+    property bool _tagFailed: false
 
     function tag(threadId, ops) {
         var r = Svc.requestTag(root._tagQueue, {
@@ -311,14 +312,26 @@ QtObject {
         // A failure is reported but does NOT stop the drain: one bad op must not strand
         // the mutations queued behind it. The refresh waits for the queue to empty, so a
         // burst of archives costs one refresh rather than one per thread.
+        //
+        // It is skipped when any op in the burst failed, which generalises the old
+        // "refresh only on code === 0". Not for freshness — the ops that did succeed
+        // changed the database — but because refresh() walks status through querying and
+        // back to idle, so refreshing here would wipe the error before it could be read.
+        // The next poll picks the change up within intervalMs, exactly as it used to.
         onExited: code => {
-            if (code !== 0)
+            if (code !== 0) {
+                root._tagFailed = true;
                 root.status = "error";
+            }
             var r = Svc.tagEvent(root._tagQueue);
             root._tagQueue = r.queue;
-            if (r.dispatch)
+            if (r.dispatch) {
                 root._dispatchTag(r.dispatch);
-            else
+                return;
+            }
+            var failed = root._tagFailed;
+            root._tagFailed = false;
+            if (!failed)
                 root.refresh();
         }
 
