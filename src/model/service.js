@@ -71,9 +71,19 @@ function newFlight() {
 // skip is the caller's "nothing to do" predicate (snippets pass "already cached").
 function requestFlight(flight, key, skip, inflightAlive) {
     var f = (flight.inflight && !inflightAlive) ? newFlight() : flight;
-    if (!key || skip || key === f.inflight)
+    if (!key || skip)
         return {
             flight: f,
+            dispatch: ""
+        };
+    // Asking again for the key already in flight: that run will deliver exactly what is
+    // wanted, so nothing is started. But anything pending was requested BEFORE this and is
+    // now stale — leaving it would end the sequence on a query the user has moved off.
+    if (key === f.inflight)
+        return {
+            flight: Object.assign({}, f, {
+                pending: ""
+            }),
             dispatch: ""
         };
     if (!f.inflight)

@@ -44,6 +44,12 @@ QtObject {
 
     // Tag discovery: notmuch search --output=tags '*' → discoveredTags, which rebuilds
     // definitions (hence refreshCounts through onDefinitionsChanged).
+    //
+    // Deliberately NOT routed through the coalescing flight, unlike the search and the
+    // counts: the command is a static binding, so a re-arm that no-ops merely skips a run
+    // identical to the one already in flight, and the next poll picks it up anyway. A
+    // flight here would add state for no change in behaviour. Same reasoning for
+    // unreadProc below.
     function discoverTags() {
         tagsProc.running = true;
     }
@@ -58,14 +64,35 @@ QtObject {
     // Reading client command (config) — used to open a thread.
     property string readerCommand: ""
 
-    // Sets command imperatively (no lazy binding) then starts: guarantees the query that
-    // runs is the current one, even right after a change.
+    // Searches go through the coalescing flight. Re-arming a Process that is already
+    // running is a QML no-op, so a rail click or a free-text search landing while the
+    // 20 s poll's own search is still running used to be dropped in silence: the list
+    // kept showing the previous query's results until the next poll happened to pick the
+    // new currentQuery up.
     property var _searchRun: Svc.newSearchRun()
+    property var _searchFlight: Svc.newFlight()
+
     function runSearch() {
+        var r = Svc.requestFlight(root._searchFlight, root.currentQuery, false, searchProc.running);
+        root._searchFlight = r.flight;
+        if (r.dispatch)
+            _dispatchSearch(r.dispatch);
+    }
+    // Sets command imperatively (no lazy binding) then starts: guarantees the query that
+    // runs is the one the flight just dispatched, not whatever currentQuery became since.
+    function _dispatchSearch(query) {
         root._searchRun = Svc.newSearchRun();
         root.status = Svc.decideSearchStatus(root._searchRun);
-        searchProc.command = ["notmuch"].concat(Queries.search(root.currentQuery));
-        searchProc.running = true;
+        searchProc.command = ["notmuch"].concat(Queries.search(query));
+        searchProc.running = true; // safe: only ever called on an exited process
+    }
+    // Both completion signals land here; whatever the flight hands back is the query whose
+    // turn it now is.
+    function _advanceSearch(ev) {
+        var r = Svc.flightEvent(root._searchFlight, ev);
+        root._searchFlight = r.flight;
+        if (r.dispatch)
+            _dispatchSearch(r.dispatch);
     }
     // Records one observed fact about the running search, then recomputes the status from
     // all the facts gathered so far (the three handlers fire in no guaranteed order).
@@ -241,6 +268,7 @@ QtObject {
                     root._noteSearch(Svc.searchStdoutFact(false));
                     console.warn("astropath: search parse failed:", e);
                 }
+                root._advanceSearch("stream");
             }
         }
 
@@ -251,10 +279,13 @@ QtObject {
                 console.warn("astropath notmuch:", text.trim())
         }
 
-        onExited: code => root._noteSearch({
+        onExited: code => {
+            root._noteSearch({
                 "exited": true,
                 "exitCode": code
-            })
+            });
+            root._advanceSearch("exit");
+        }
     }
 
     // Tag mutation: notmuch tag … -- thread:id.

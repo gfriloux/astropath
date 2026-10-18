@@ -123,6 +123,29 @@ TestCase {
         }
     }
 
+    // The search flight keys on the query string, so a request identical to the one in
+    // flight is a real case: clicking rail A, then B, then A again while A still runs.
+    // It must neither double-dispatch nor vanish.
+    function test_requestFlight_pendingEqualToInflightIsNotLost() {
+        var f = Svc.requestFlight(Svc.newFlight(), "tag:inbox", false, false).flight;
+        var b = Svc.requestFlight(f, "tag:unread", false, true);
+        compare(b.dispatch, "");
+        var a = Svc.requestFlight(b.flight, "tag:inbox", false, true);
+        compare(a.dispatch, "");          // the run in flight already answers this key
+        compare(a.flight.pending, "");    // but tag:unread is no longer wanted: dropped
+        var done = Svc.flightEvent(Svc.flightEvent(a.flight, "stream").flight, "exit");
+        compare(done.completedKey, "tag:inbox");
+        compare(done.dispatch, "");       // nothing left: the list already shows the newest
+    }
+
+    // The 20 s poll re-runs the same query forever: identical keys must not be mistaken
+    // for duplicates once the previous run is over.
+    function test_requestFlight_samePollQueryRunsAgainWhenIdle() {
+        var f = Svc.requestFlight(Svc.newFlight(), "tag:unread", false, false).flight;
+        var done = Svc.flightEvent(Svc.flightEvent(f, "stream").flight, "exit");
+        compare(Svc.requestFlight(done.flight, "tag:unread", false, false).dispatch, "tag:unread");
+    }
+
     function test_flightEvent_dispatchesPendingOnCompletion() {
         var q = Svc.requestFlight(Svc.newFlight(), "A", false, false).flight;
         q = Svc.requestFlight(q, "B", false, true).flight; // A still running → B pends
