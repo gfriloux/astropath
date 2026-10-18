@@ -20,9 +20,13 @@ fmt-check:
     done < <(find src -name '*.qml' -print0 2>/dev/null)
     exit $fail
 
-# Static QML lint (qmllint). No warning tolerated.
+# Static QML lint (qmllint), then the plugin manifest against DMS's published schema.
+# No warning tolerated.
 lint:
-    @find src -name '*.qml' -print0 2>/dev/null | xargs -0 -r qmllint
+    #!/usr/bin/env bash
+    set -euo pipefail
+    find src -name '*.qml' -print0 2>/dev/null | xargs -0 -r qmllint
+    scripts/check-manifest
 
 # Golden tests: qmltestrunner runs the JS transforms on fixtures → compares to the goldens.
 test:
